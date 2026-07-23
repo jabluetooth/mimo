@@ -43,6 +43,7 @@ export default function ChatPage() {
 
   return (
     <div className="chat-page">
+      <h1 className="visually-hidden">Chat with the knowledge assistant</h1>
       <div id="n8n-chat" ref={containerRef} />
     </div>
   );

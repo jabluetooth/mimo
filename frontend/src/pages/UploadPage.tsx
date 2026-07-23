@@ -1,4 +1,4 @@
-import { useRef, useState, DragEvent, ChangeEvent } from 'react';
+import { useId, useRef, useState, DragEvent, ChangeEvent } from 'react';
 
 const UPLOAD_WEBHOOK_URL = import.meta.env.VITE_UPLOAD_WEBHOOK_URL;
 const BINARY_FIELD_NAME = 'data'; // must match the ingestion webhook node's binaryPropertyName
@@ -8,6 +8,7 @@ const ACCEPTED_TYPES =
 type Status = { kind: 'idle' | 'uploading' | 'success' | 'error'; message: string };
 
 export default function UploadPage() {
+  const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -18,7 +19,7 @@ export default function UploadPage() {
     setStatus({ kind: 'idle', message: '' });
   }
 
-  function onDrop(e: DragEvent<HTMLDivElement>) {
+  function onDrop(e: DragEvent<HTMLLabelElement>) {
     e.preventDefault();
     setDragOver(false);
     const dropped = e.dataTransfer.files[0];
@@ -87,9 +88,16 @@ export default function UploadPage() {
         Adds this file to the internal knowledge base (PDF, DOCX, TXT, or Markdown).
       </p>
 
-      <div
+      {/*
+        A <label> wrapping a real <input type="file"> gets native click-to-open,
+        keyboard focus, and Enter/Space-to-open behavior for free — no
+        role/tabIndex/keydown polyfilling needed. The input is nested inside the
+        label (so :focus-within on .dropzone reacts to it) and visually hidden
+        (not display:none) so it stays focusable and reachable by keyboard.
+      */}
+      <label
+        htmlFor={fileInputId}
         className={`dropzone${dragOver ? ' dragover' : ''}`}
-        onClick={() => fileInputRef.current?.click()}
         onDragOver={(e) => {
           e.preventDefault();
           setDragOver(true);
@@ -97,26 +105,29 @@ export default function UploadPage() {
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
       >
+        <input
+          ref={fileInputRef}
+          id={fileInputId}
+          type="file"
+          accept={ACCEPTED_TYPES}
+          className="visually-hidden"
+          onChange={onInputChange}
+        />
         <p>{file ? 'Selected:' : 'Click to choose a file, or drag one here'}</p>
         <div className="filename">{file?.name ?? ''}</div>
-      </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={ACCEPTED_TYPES}
-        style={{ display: 'none' }}
-        onChange={onInputChange}
-      />
+      </label>
 
       <button className="primary-button" disabled={!file || isUploading} onClick={upload}>
         {isUploading ? 'Uploading...' : 'Upload'}
       </button>
 
-      {status.message && (
-        <div className={`status-message ${status.kind === 'error' ? 'error' : status.kind === 'success' ? 'success' : ''}`}>
-          {status.message}
-        </div>
-      )}
+      <div
+        className={`status-message ${status.kind === 'error' ? 'error' : status.kind === 'success' ? 'success' : ''}`}
+        role="status"
+        aria-live="polite"
+      >
+        {status.message}
+      </div>
 
       <div className="hint">
         Posts to <code>{UPLOAD_WEBHOOK_URL || 'VITE_UPLOAD_WEBHOOK_URL (not set)'}</code>.
