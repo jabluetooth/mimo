@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
   readonly VITE_CHAT_WEBHOOK_URL: string;
   readonly VITE_UPLOAD_WEBHOOK_URL: string;
+  readonly VITE_LIST_DOCUMENTS_URL: string;
 }
 
 interface ImportMeta {

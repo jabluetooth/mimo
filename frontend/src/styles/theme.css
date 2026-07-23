@@ -1,14 +1,43 @@
 :root {
-  --bg: #0b0d12;
-  --panel: #12161f;
-  --panel-alt: #171c28;
-  --border: #232838;
-  --text: #e6e9f0;
-  --muted: #8b93a7;
-  --accent: #6d8cff;
-  --accent-hover: #5a78e6;
-  --success: #34d399;
-  --error: #f87171;
+  /* Warm off-white base + two brand accents (red-orange = primary/CTA,
+     blue = secondary/links), plus supporting neutrals derived from the same
+     warm cream undertone rather than generic cool grays. All values below
+     were checked against WCAG AA (4.5:1 for normal text, 3:1 for large text
+     and UI components) — see the accompanying design notes for the numbers. */
+  --bg: #fcf3ee;
+  --panel: #ffffff;
+  --panel-alt: #fbeee6;
+  --border: #ead9cc;
+  --border-strong: #d9c3b3;
+  --text: #2b211d;
+  --muted: #6e5d53;
+
+  /* Accent 1 (brand red-orange, #E73F1E) has two tones:
+     --accent-raw is the exact brand value, reserved for large/bold text,
+     icons, and non-text UI (focus rings, decorative marks) where WCAG's 3:1
+     threshold applies. --accent is a ~13% deepened version of the same hue,
+     used everywhere the color sits behind or as small text (buttons, active
+     nav, links) so normal-size text/labels still clear 4.5:1. */
+  --accent-raw: #e73f1e;
+  --accent: #c9371a;
+  --accent-hover: #b93218;
+
+  /* Accent 2 (brand blue, #007DCC) follows the same pattern. */
+  --accent-2-raw: #007dcc;
+  --accent-2: #0071b8;
+  --accent-2-hover: #0064a3;
+
+  --success: #1e7a34;
+  --error: #b3261e;
+
+  --shadow-sm: 0 1px 2px rgba(43, 33, 29, 0.05);
+  --shadow-md: 0 16px 32px -12px rgba(43, 33, 29, 0.16), 0 2px 6px rgba(43, 33, 29, 0.06);
+
+  /* Fraunces (soft serif) for the brand and headings, Work Sans (humanist
+     sans) for body copy — a deliberate serif/sans pairing instead of a
+     single generic system-font stack. */
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-body: 'Work Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 * {
@@ -25,7 +54,14 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3,
+.app-header .brand {
+  font-family: var(--font-display);
 }
 
 a {
@@ -49,7 +85,8 @@ a {
 /* Visible keyboard-focus indicator across interactive elements. Only shown for
    keyboard/programmatic focus (:focus-visible), not for mouse clicks. */
 .app-nav a:focus-visible,
-.primary-button:focus-visible {
+.primary-button:focus-visible,
+.secondary-button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -85,18 +122,25 @@ a {
   padding: 16px 24px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  background: var(--bg);
 }
 
 .app-header .brand {
-  font-weight: 700;
-  font-size: 15px;
+  font-weight: 600;
+  font-size: 19px;
   letter-spacing: 0.2px;
+  text-decoration: none;
+  border-radius: 6px;
+  color: var(--text);
 }
 
-.app-header .brand span {
-  color: var(--muted);
-  font-weight: 400;
-  margin-left: 8px;
+.app-header .brand:hover {
+  color: var(--accent);
+}
+
+.app-header .brand:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
 .app-nav {
@@ -125,7 +169,7 @@ a {
 
 .app-nav a:not(.active):hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--panel-alt);
 }
 
 .app-main {
@@ -134,6 +178,21 @@ a {
   align-items: center;
   justify-content: center;
   padding: 24px;
+  /* Lets a flex child with height:100% (the chat widget) actually resolve
+     against this container instead of being sized to its own content — see
+     .app-main--full below. Without this, min-height defaults to "auto" and
+     percentage heights inside a flex item are ignored. */
+  min-height: 0;
+}
+
+/* The chat route wants to fill the entire area below the header edge-to-edge
+   (the @n8n/chat widget lays itself out in "fullscreen" mode assuming a
+   100%-height parent). Centering it like the other pages left it floating as
+   a small box in a sea of empty background — this is the fix for that. */
+.app-main--full {
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
 }
 
 .card {
@@ -143,10 +202,11 @@ a {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 32px;
+  box-shadow: var(--shadow-md);
 }
 
 .card h1 {
-  font-size: 20px;
+  font-size: 22px;
   margin: 0 0 4px;
 }
 
@@ -158,17 +218,18 @@ a {
 
 .dropzone {
   display: block;
-  border: 2px dashed var(--border);
+  border: 2px dashed var(--border-strong);
   border-radius: 12px;
   padding: 32px 16px;
   text-align: center;
   cursor: pointer;
+  background: var(--panel-alt);
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .dropzone.dragover {
   border-color: var(--accent);
-  background: rgba(109, 140, 255, 0.08);
+  background: rgba(201, 55, 26, 0.08);
 }
 
 .dropzone p {
@@ -207,6 +268,41 @@ a {
   cursor: not-allowed;
 }
 
+/* Outline variant for secondary actions (e.g. the landing page's second CTA) —
+   same shape and sizing as .primary-button so the pair reads as one family.
+   Uses accent-2 (blue) rather than accent-1 (red-orange) on hover/interaction
+   so the two brand accents are used deliberately: red-orange = primary
+   action, blue = secondary action/links. */
+.secondary-button {
+  padding: 12px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.secondary-button:hover {
+  border-color: var(--accent-2);
+  color: var(--accent-2);
+  background: rgba(0, 113, 184, 0.06);
+}
+
+/* .primary-button/.secondary-button default to full-width block buttons (the
+   upload form's single CTA); links used as inline side-by-side CTAs opt out
+   of that with this modifier. */
+.cta-button {
+  width: auto;
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .status-message {
   margin-top: 16px;
   font-size: 14px;
@@ -229,36 +325,392 @@ a {
 }
 
 code {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
   padding: 1px 5px;
   border-radius: 4px;
   font-size: 11px;
 }
 
-/* Scope the @n8n/chat widget to fill the chat page and follow the same palette */
+/* Upload page: step-by-step progress list. Visual reinforcement of the same
+   text already carried by the aria-live .status-message below it (see the
+   aria-hidden note on the list itself in UploadPage.tsx). */
+.upload-steps {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.upload-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.upload-step-marker {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.upload-step--active .upload-step-marker {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.upload-step--active .upload-step-label {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.upload-step--done .upload-step-marker {
+  border-color: var(--success);
+  background: var(--success);
+  color: white;
+}
+
+.upload-step--done .upload-step-label {
+  color: var(--text);
+}
+
+.upload-step--error .upload-step-marker {
+  border-color: var(--error);
+  background: var(--error);
+  color: white;
+}
+
+.upload-step--error .upload-step-label {
+  color: var(--error);
+  font-weight: 600;
+}
+
+/* Library (Knowledge base) page */
+.library-page {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.library-header h1 {
+  margin: 0 0 4px;
+}
+
+.library-header .subtitle {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.library-panel {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: var(--shadow-md);
+}
+
+.library-status {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.library-status--error p:first-child {
+  color: var(--error);
+  margin: 0 0 8px;
+}
+
+.library-empty {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.library-empty p {
+  color: var(--muted);
+  margin: 0 0 20px;
+}
+
+.library-empty .primary-button {
+  width: auto;
+  margin-top: 0;
+}
+
+.library-count {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.doc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doc-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.doc-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.doc-row:first-child {
+  padding-top: 0;
+}
+
+.doc-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.doc-source {
+  font-weight: 600;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.doc-updated {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.doc-row-stats {
+  flex-shrink: 0;
+  display: flex;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Landing page */
+.landing {
+  width: 100%;
+  max-width: 880px;
+  padding: 24px 0 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+.hero-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.hero-eyebrow {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.hero-content h1 {
+  margin: 0 0 16px;
+  font-size: clamp(28px, 3.6vw, 40px);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.hero-lede {
+  margin: 0;
+  max-width: 52ch;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.cta-row {
+  margin-top: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+.hero-media {
+  display: flex;
+}
+
+.video-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--panel);
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.video-placeholder .play-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-placeholder-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* Scope the @n8n/chat widget to fill the chat page and follow the same palette.
+   Deliberately no explicit `height` here: this div's height comes from being
+   stretched by its flex parent (.app-main--full, align-items: stretch) and
+   in turn stretches its own flex child (#n8n-chat) the same way. Percentage
+   heights on flex items are a known correctness trap — they only resolve
+   once the ancestor chain settles on a definite size, and that resolution
+   order is inconsistent enough in practice that the widget ended up rendering
+   at its own content height (a few hundred px) inside a much taller container,
+   leaving a large dead band of background below it. Stretch avoids the whole
+   percentage-resolution question. */
 .chat-page {
   width: 100%;
-  height: 100%;
   display: flex;
 }
 
 .chat-page #n8n-chat {
   width: 100%;
-  height: 100%;
+  --chat--font-family: var(--font-body);
+
+  /* Brand accents: red-orange drives primary actions (toggle, send button,
+     user bubbles), blue is the secondary accent the widget uses for a
+     handful of its own internal highlights. */
   --chat--color-primary: var(--accent);
   --chat--color-primary-shade-50: var(--accent-hover);
-  --chat--color-secondary: var(--accent);
+  --chat--color-primary-shade-100: #a22c15;
+  --chat--color-secondary: var(--accent-2);
+  --chat--color-secondary-shade-50: var(--accent-2-hover);
+
+  --chat--color-white: #ffffff;
+  --chat--color-light: var(--panel-alt);
+  --chat--color-light-shade-50: var(--border);
+  --chat--color-light-shade-100: var(--border-strong);
+  --chat--color-medium: var(--border-strong);
+  --chat--color-dark: var(--text);
+  --chat--color-disabled: #b7a89d;
+  --chat--color-typing: var(--muted);
+
   --chat--window--width: 100%;
   --chat--window--height: 100%;
-  --chat--message--bot--background: var(--panel-alt);
+  --chat--window--border: none;
+
+  /* Header bar: filled with the primary accent + white text so it reads as a
+     deliberate branded surface rather than another flat gray bar. */
+  --chat--header--background: var(--accent);
+  --chat--header--color: #ffffff;
+  --chat--heading--font-size: 1.375em;
+
+  /* Message list area sits on the cream page background; bot bubbles get a
+     white surface + hairline border so they read as distinct "cards" against
+     that background (a plain color match alone is too low-contrast to be
+     legible as a bubble boundary — see the panel-vs-bg contrast note in the
+     design doc). User bubbles are filled with the accent and white text. */
+  --chat--body--background: var(--bg);
+  --chat--message--bot--background: var(--panel);
   --chat--message--bot--color: var(--text);
+  --chat--message--bot--border: 1px solid var(--border);
   --chat--message--user--background: var(--accent);
   --chat--message--user--color: #ffffff;
-  --chat--body--background: var(--bg);
+  --chat--message--pre--background: rgba(43, 33, 29, 0.06);
+
+  /* Input field: white surface + visible border so it's distinguishable from
+     both the cream body behind it and the white bot bubbles above it, with an
+     accent-colored active/focus border for a clear, accessible focus state. */
   --chat--input--background: var(--panel);
   --chat--input--text-color: var(--text);
-  --chat--header--background: var(--panel);
-  --chat--header--color: var(--text);
+  --chat--input--border: 1px solid var(--border-strong);
+  /* Consumed by the widget as `border-color: var(--chat--input--border-active)`
+     on :focus/:hover (not a full `border` shorthand) — must be a bare color,
+     otherwise it's an invalid value at computed-value time and silently
+     resets to currentcolor instead of the intended accent. */
+  --chat--input--border-active: var(--accent);
+  --chat--input--file--button--background: var(--panel-alt);
+  --chat--input--file--button--background-hover: var(--border);
+  --chat--input--file--button--color: var(--text);
+  --chat--input--file--button--color-hover: var(--accent);
+  --chat--input--send--button--background: var(--accent);
+  --chat--input--send--button--background-hover: var(--accent-hover);
+  --chat--input--send--button--color: #ffffff;
+  --chat--input--send--button--color-hover: #ffffff;
+
+  --chat--button--background: var(--accent);
+  --chat--button--color: #ffffff;
+  --chat--button--hover--background: var(--accent-hover);
+  --chat--button--hover--color: #ffffff;
+  --chat--close--button--color-hover: var(--accent);
+
+  /* Without these two the widget's required "Powered by n8n" footer renders
+     with its light-theme defaults, which happened to clash hard against the
+     old dark page. Now that the page itself is light, map it onto the same
+     panel/muted tones as the rest of the chrome instead of removing it
+     (removing the attribution isn't ours to do on the free widget). */
+  --chat--footer--background: var(--panel-alt);
+  --chat--footer--color: var(--muted);
+}
+
+/* Tablet and narrower: stack the hero into a single column (text above,
+   video placeholder below) before the header/nav needs to stack too. */
+@media (max-width: 720px) {
+  .hero-row {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .hero-content {
+    text-align: center;
+    align-items: center;
+  }
+
+  .cta-row {
+    justify-content: center;
+  }
 }
 
 /* Narrow viewports (~375px phones): stack the header and let nav pills fill
@@ -283,7 +735,36 @@ code {
     padding: 16px;
   }
 
+  .app-main--full {
+    padding: 0;
+  }
+
   .card {
     padding: 24px 20px;
+  }
+
+  .library-panel {
+    padding: 20px;
+  }
+
+  .doc-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .landing {
+    gap: 40px;
+    padding: 8px 0 32px;
+  }
+
+  .cta-row {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .cta-row .cta-button {
+    width: 100%;
   }
 }

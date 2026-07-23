@@ -14,7 +14,7 @@ export default function ChatPage() {
 
     if (!CHAT_WEBHOOK_URL) {
       containerRef.current.innerHTML =
-        '<p style="color:#f87171;padding:24px;font-size:14px;">' +
+        '<p style="color:var(--error);padding:24px;font-size:14px;font-family:var(--font-body);">' +
         'VITE_CHAT_WEBHOOK_URL is not set. Copy .env.example to .env and paste in the Chat Trigger webhook URL from the n8n query workflow.' +
         '</p>';
       return;
@@ -30,7 +30,7 @@ export default function ChatPage() {
       ],
       i18n: {
         en: {
-          title: 'Mimo',
+          title: 'Ask a question',
           subtitle: '',
           footer: '',
           getStarted: 'New conversation',
