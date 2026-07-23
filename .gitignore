@@ -1,0 +1,18 @@
+# Secrets — never commit
+.env
+.env.local
+*.local
+
+# Dependencies
+node_modules/
+seed/node_modules/
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+dist/
+*.tsbuildinfo
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
