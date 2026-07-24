@@ -3,6 +3,466 @@
   "nodes": [
     {
       "parameters": {
+        "httpMethod": "POST",
+        "path": "auth-signup",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d10b41ef-98f3-436f-88f6-d18c3fdd8954",
+      "name": "Signup Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1648,
+        -672
+      ],
+      "webhookId": "2bc9aab8-3676-4f0a-894d-6445be79b6a6"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT count(*)::int AS cnt FROM users WHERE email = $1;",
+        "options": {
+          "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email] }}"
+        }
+      },
+      "id": "cbb12224-e376-4c08-913b-dbee71bc0b4f",
+      "name": "Check Email Exists (Signup)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1424,
+        -672
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.cnt }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "374fe6f7-4829-4645-84bf-6ceba7f39f0b",
+      "name": "Email Taken?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1200,
+        -672
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": \"Email already registered\" } }}",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "id": "b71f8b08-b8c3-47d3-abcc-5f68d9c39939",
+      "name": "Respond Email Taken",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -976,
+        -768
+      ]
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "salt",
+        "encodingType": "hex"
+      },
+      "id": "492531cb-e1ae-4e0d-a300-c9c84100be03",
+      "name": "Generate Salt (Signup)",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        -576
+      ]
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "value": "={{ $json.salt + ':' + $('Signup Webhook').item.json.body.password }}",
+        "dataPropertyName": "passwordHash"
+      },
+      "id": "0854c5c1-c69f-4f17-a1e0-52e07c1bff65",
+      "name": "Hash Password (Signup)",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -752,
+        -576
+      ],
+      "credentials": {
+        "crypto": {
+          "id": "wCP90N6hrlXW230B",
+          "name": "RAG Password Pepper"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO users (email, password_hash, password_salt) VALUES ($1, $2, $3) RETURNING id, email, role;",
+        "options": {
+          "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email, $json.passwordHash, $('Generate Salt (Signup)').item.json.salt] }}"
+        }
+      },
+      "id": "c94e9c98-5e74-4e87-b4af-20374121d718",
+      "name": "Insert User",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -528,
+        -576
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "useJson": true,
+        "claimsJson": "={{ { \"sub\": $json.id, \"email\": $json.email, \"role\": $json.role, \"exp\": Math.floor(Date.now()/1000) + 604800 } }}",
+        "options": {
+          "algorithm": "HS256"
+        }
+      },
+      "id": "4419640c-f7d3-428d-b71f-ad9c01938986",
+      "name": "Sign JWT (Signup)",
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -576
+      ],
+      "credentials": {
+        "jwtAuth": {
+          "id": "ES6QZ4RivDaxvKn5",
+          "name": "RAG JWT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3235c73f-a54c-4471-9019-3e08a7825900",
+              "name": "token",
+              "type": "string",
+              "value": "={{ $json.token }}"
+            },
+            {
+              "id": "ef8b4884-55eb-49b2-bf24-74460fb60f0e",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $('Insert User').item.json.email }}"
+            },
+            {
+              "id": "862561c2-a95f-4d3d-8775-e2b282f88482",
+              "name": "role",
+              "type": "string",
+              "value": "={{ $('Insert User').item.json.role }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "82ce49a7-83e0-40d4-8e2f-641f2c267a3f",
+      "name": "Shape Signup Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        -576
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "8dbd3ffb-127f-4166-b3cc-59f77600a30b",
+      "name": "Respond Signup Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        144,
+        -576
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "auth-login",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "4a0879d8-905d-4b3d-ad12-56a3f576326d",
+      "name": "Login Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1648,
+        -224
+      ],
+      "webhookId": "85d54581-628d-41f9-aac8-f3e6a2610ad0"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT count(*)::int AS cnt FROM users WHERE email = $1;",
+        "options": {
+          "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
+        }
+      },
+      "id": "76469dee-3eeb-4df2-a5d2-ae5968db1951",
+      "name": "Check User Exists (Login)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1424,
+        -224
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.cnt }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "rightValue": 0,
+              "id": "53d16141-dc18-4cac-ad98-3ac59fe4dd05"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "bf4616f5-c516-4a68-b4e0-ea24b9e29719",
+      "name": "User Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1200,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": \"Invalid email or password\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "06f20eb5-6650-43ac-b6e4-5a7df31f62a5",
+      "name": "Respond Invalid Login",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -304,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, email, password_hash, password_salt, role FROM users WHERE email = $1 LIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
+        }
+      },
+      "id": "64339855-87fb-42c6-871c-56a018eafb5a",
+      "name": "Fetch User (Login)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -976,
+        -304
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "value": "={{ $json.password_salt + ':' + $('Login Webhook').item.json.body.password }}",
+        "dataPropertyName": "passwordHash"
+      },
+      "id": "fb74971d-5b94-4da7-8b84-a0aad31b8a4e",
+      "name": "Hash Submitted Password (Login)",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -752,
+        -304
+      ],
+      "credentials": {
+        "crypto": {
+          "id": "wCP90N6hrlXW230B",
+          "name": "RAG Password Pepper"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.passwordHash }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "={{ $('Fetch User (Login)').item.json.password_hash }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4b1a5f41-0ce5-4a80-9c0d-ade1169b22b5",
+      "name": "Password Correct?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        -304
+      ]
+    },
+    {
+      "parameters": {
+        "useJson": true,
+        "claimsJson": "={{ { \"sub\": $('Fetch User (Login)').item.json.id, \"email\": $('Fetch User (Login)').item.json.email, \"role\": $('Fetch User (Login)').item.json.role, \"exp\": Math.floor(Date.now()/1000) + 604800 } }}",
+        "options": {
+          "algorithm": "HS256"
+        }
+      },
+      "id": "72be7df8-b7c5-497e-82a7-563e843a2ff1",
+      "name": "Sign JWT (Login)",
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -352
+      ],
+      "credentials": {
+        "jwtAuth": {
+          "id": "ES6QZ4RivDaxvKn5",
+          "name": "RAG JWT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9d6cf7d4-92b5-473f-9685-39802ea5e561",
+              "name": "token",
+              "type": "string",
+              "value": "={{ $json.token }}"
+            },
+            {
+              "id": "e85d0d86-e29a-4f82-899b-ae2411525c2c",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $('Fetch User (Login)').item.json.email }}"
+            },
+            {
+              "id": "8ed39b14-eee3-4bb5-8e8d-6d06df67f98b",
+              "name": "role",
+              "type": "string",
+              "value": "={{ $('Fetch User (Login)').item.json.role }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "47cc9e13-dd29-4fc6-965c-a95127e58ffb",
+      "name": "Shape Login Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        -352
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "15819468-5c42-4269-b19e-d1233d8abda0",
+      "name": "Respond Login Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        144,
+        -352
+      ]
+    },
+    {
+      "parameters": {
         "public": true,
         "mode": "webhook",
         "options": {
@@ -10,13 +470,13 @@
           "responseMode": "lastNode"
         }
       },
-      "id": "38b249d9-8026-4f85-9802-6c941246e807",
+      "id": "3e5bfcf6-5e77-4765-9553-1f8940477756",
       "name": "Chat Trigger",
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        0,
-        160
+        -1648,
+        560
       ],
       "webhookId": "3d0b43af-45fb-436b-ace4-c668bdf7c8a5"
     },
@@ -27,13 +487,13 @@
             {
               "id": "question",
               "name": "question",
-              "value": "={{ $json.chatInput ?? $json.body?.chatInput ?? \"\" }}",
+              "value": "={{ $('Chat Trigger').item.json.chatInput ?? \"\" }}",
               "type": "string"
             },
             {
               "id": "sessionId",
               "name": "sessionId",
-              "value": "={{ $json.sessionId ?? $json.body?.sessionId ?? \"\" }}",
+              "value": "={{ $('Chat Trigger').item.json.sessionId ?? \"\" }}",
               "type": "string"
             },
             {
@@ -47,13 +507,13 @@
         "includeOtherFields": true,
         "options": {}
       },
-      "id": "8c9aa87a-9b30-4ce3-83d0-5fead1f5473b",
+      "id": "2f18381a-d7fc-4384-b318-258a70bac5ac",
       "name": "Normalize Question",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        448,
-        256
+        -976,
+        560
       ]
     },
     {
@@ -68,13 +528,13 @@
         "topK": 8,
         "options": {}
       },
-      "id": "6cad94a7-28b8-4c40-888c-bda0f97c0682",
+      "id": "4f6fadf7-4e34-42b2-b830-9b55db3621e8",
       "name": "Retrieve Candidate Chunks",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "typeVersion": 1.3,
       "position": [
-        672,
-        256
+        -752,
+        464
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -95,13 +555,13 @@
         "jsonBody": "={{ { \"inputs\": { \"source_sentence\": $(\"Normalize Question\").item.json.question, \"sentences\": $input.all().map(i => i.json.document.pageContent) } } }}",
         "options": {}
       },
-      "id": "0f85e472-815e-4c1d-9bf6-34aa4ba16549",
+      "id": "b95f666d-bd2d-498b-941c-8be25982c531",
       "name": "Rerank with HuggingFace",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1248,
-        176
+        -176,
+        496
       ],
       "executeOnce": true,
       "credentials": {
@@ -119,13 +579,13 @@
       "parameters": {
         "jsCode": "const NL = String.fromCharCode(10);\nconst raw = $input.first().json;\nlet scores;\nif (Array.isArray(raw)) {\n  scores = raw;\n} else if (raw && Array.isArray(raw.data)) {\n  scores = raw.data;\n} else {\n  scores = $input.all().map(function (item) {\n    const v = item.json;\n    if (typeof v === 'number') return v;\n    if (v && typeof v.data === 'number') return v.data;\n    const vals = Object.values(v || {});\n    return typeof vals[0] === 'number' ? vals[0] : 0;\n  });\n}\n\nconst originalChunks = $('Retrieve Candidate Chunks').all().map(i => i.json);\n\n// RBAC: only surface chunks the requester's role is allowed to see. Missing\n// visibility (pre-RBAC ingested docs) defaults to 'member' so nothing already\n// in the knowledge base silently disappears.\nconst requesterRole = $('JWT Verify (Chat)').item.json.payload.role;\nconst allowedVisibilities = requesterRole === 'admin' ? ['member', 'admin'] : ['member'];\n\nconst scored = originalChunks.map(function (chunk, idx) {\n  return {\n    pageContent: chunk.document.pageContent,\n    metadata: chunk.document.metadata || {},\n    relevanceScore: scores[idx] !== undefined ? scores[idx] : 0\n  };\n}).filter(function (chunk) {\n  const visibility = chunk.metadata.visibility || 'member';\n  return allowedVisibilities.indexOf(visibility) !== -1;\n});\n\nscored.sort(function (a, b) { return b.relevanceScore - a.relevanceScore; });\nconst ranked = scored.slice(0, 4);\n\nconst topScore = ranked.length > 0 ? ranked[0].relevanceScore : 0;\n\nconst contextText = ranked.map((c, i) => {\n  const src = c.metadata.source || 'unknown source';\n  const section = c.metadata.section || 'n/a';\n  const updated = c.metadata.updated_at || 'n/a';\n  return '[' + (i + 1) + '] Source: ' + src + ' | Section: ' + section + ' | Last updated: ' + updated + NL + c.pageContent;\n}).join(NL + NL);\n\nconst citations = ranked.map((c, i) => ({\n  marker: '[' + (i + 1) + ']',\n  source: c.metadata.source || 'unknown source',\n  section: c.metadata.section || 'n/a',\n  updatedAt: c.metadata.updated_at || 'n/a',\n  relevanceScore: c.relevanceScore\n}));\n\nconst citationsFormatted = citations.map(c => c.marker + ' ' + c.source + ' (' + c.section + ', updated ' + c.updatedAt + ')').join(NL);\n\nreturn [{ json: { topScore: topScore, contextText: contextText, citations: citations, citationsFormatted: citationsFormatted, chunkCount: ranked.length } }];"
       },
-      "id": "cf79f602-0cf8-4bd1-a6ed-c47c57ca1bd7",
+      "id": "e3f50266-c6bf-4c88-b51a-af40c6ff4aaf",
       "name": "Build Grounded Context",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1472,
-        256
+        48,
+        560
       ]
     },
     {
@@ -137,24 +597,24 @@
           "maxIterations": 3
         }
       },
-      "id": "78c4d362-aab4-4a0b-9c41-edcc3ad14b05",
+      "id": "91ea5b77-3099-4806-b3b2-e1731691ad57",
       "name": "Generate Grounded Answer",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1920,
-        0
+        496,
+        320
       ]
     },
     {
       "parameters": {},
-      "id": "b614a723-8a14-462a-a317-29af840b6676",
+      "id": "15dd5bbc-861d-4f71-8e72-5e313131a448",
       "name": "Conversation Memory",
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [
-        2064,
-        224
+        640,
+        544
       ]
     },
     {
@@ -207,13 +667,13 @@
         },
         "options": {}
       },
-      "id": "c102886e-28c7-4eb8-a793-ac206ac76431",
+      "id": "08c16f54-1f25-4f8b-9d2b-38762630175a",
       "name": "Shape Success Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2272,
-        112
+        848,
+        416
       ]
     },
     {
@@ -224,13 +684,13 @@
           "queryReplacement": "={{ [$json.sessionId, $json.question, $json.outcome, $json.confidenceScore, $json.citationsJson, $json.latencyMs, $execution.id] }}"
         }
       },
-      "id": "a2f077e3-0d84-4764-ba1e-35e242bf3b5a",
+      "id": "59d244b8-4e6f-4542-8035-4db8721f8f36",
       "name": "Log Answered Query",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2496,
-        112
+        1072,
+        416
       ],
       "credentials": {
         "postgres": {
@@ -289,13 +749,13 @@
         },
         "options": {}
       },
-      "id": "f4579397-572d-4213-8134-041d335ec410",
+      "id": "a3b3d03b-91ae-4f5e-beff-cd2d8dd85465",
       "name": "Shape Refusal Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1984,
-        400
+        560,
+        720
       ]
     },
     {
@@ -306,13 +766,13 @@
           "queryReplacement": "={{ [$json.sessionId, $json.question, $json.outcome, $json.confidenceScore, $json.citationsJson, $json.latencyMs, $execution.id] }}"
         }
       },
-      "id": "4786ce2f-5a97-4011-ab32-bbb7ece54644",
+      "id": "dc097a6a-121c-482f-9018-0520bb329993",
       "name": "Log Refused Query",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2272,
-        400
+        848,
+        720
       ],
       "credentials": {
         "postgres": {
@@ -332,13 +792,13 @@
         "text": "=:warning: Knowledge gap detected\nQuestion: {{ $(\"Normalize Question\").item.json.question }}\nConfidence score: {{ $(\"Build Grounded Context\").item.json.topScore }}\nSession: {{ $(\"Normalize Question\").item.json.sessionId }}",
         "otherOptions": {}
       },
-      "id": "0556d710-ace3-49c6-a01c-be0092b49710",
+      "id": "884984cc-ff14-40a8-a29f-ec9a0e4c4f62",
       "name": "Alert: Knowledge Gap",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.5,
       "position": [
-        2496,
-        400
+        1072,
+        720
       ],
       "webhookId": "a7d3d364-14e4-4cb5-a30a-d0d4438fe608",
       "retryOnFail": true,
@@ -352,34 +812,18 @@
     },
     {
       "parameters": {
-        "content": "## Setup checklist before this workflow can run 1. Fill in real credentials for: Groq Account, HuggingFace Account, Qdrant Account, Cohere API, Slack Bot (each was created as a placeholder - open Credentials in n8n and add the real keys). 2. Set the Qdrant collection name in Retrieve Candidate Chunks (currently a placeholder). 3. Set a real Slack channel in Alert: Knowledge Gap (currently #knowledge-gaps placeholder) and invite the bot to it. 4. Create the Postgres logging table once (Neon credential is already wired): CREATE TABLE query_logs (id SERIAL PRIMARY KEY, session_id TEXT, question TEXT, outcome TEXT, confidence_score NUMERIC, citations JSONB, latency_ms INTEGER, execution_id TEXT, created_at TIMESTAMPTZ DEFAULT now()); 5. Confidence threshold is 0.5 in Confidence Check - tune after running the eval set (PRD section 7). 6. Answer generation runs on Groq (Llama 3.3 70B) instead of Claude, and embeddings run on HuggingFace Inference instead of OpenAI, per your request to use Groq/HuggingFace access you already have. Groq/Llama may follow citation instructions less strictly than Claude did - re-run the eval set (PRD section 7) to confirm citation accuracy still holds before treating this as production-ready. 7. This is the query workflow only (PRD Milestone 2). Qdrant needs chunks in it before retrieval returns anything - populate it manually or build the ingestion workflow next (PRD Milestone 1).",
-        "height": 200,
-        "width": 300,
-        "color": 5
-      },
-      "id": "3dcb2901-7288-4efe-b2c5-a5d3b7806a0c",
-      "name": "Sticky Note b80c8823",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        240,
-        112
-      ]
-    },
-    {
-      "parameters": {
         "modelName": "sentence-transformers/all-mpnet-base-v2",
         "options": {
           "provider": "auto"
         }
       },
-      "id": "b312f5ad-5c51-4a5f-8b30-850474bf633e",
+      "id": "7810def2-e5bb-4240-ad72-9a4a140ea254",
       "name": "HuggingFace Embeddings",
       "type": "@n8n/n8n-nodes-langchain.embeddingsHuggingFaceInference",
       "typeVersion": 1,
       "position": [
-        752,
-        480
+        -672,
+        688
       ],
       "credentials": {
         "huggingFaceApi": {
@@ -396,13 +840,13 @@
           "temperature": 0.2
         }
       },
-      "id": "c70b41f5-834d-4c1a-b6ab-3d443d93dced",
+      "id": "e1eaaff0-40de-473c-adf3-caab3f4cc213",
       "name": "Groq LLM",
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        1936,
-        224
+        512,
+        544
       ],
       "credentials": {
         "groqApi": {
@@ -435,13 +879,13 @@
         },
         "options": {}
       },
-      "id": "9bd84521-dd0d-446d-b579-64e4b4bf6a23",
+      "id": "bafe8734-db5b-41db-8c21-7bd0240dc3e8",
       "name": "Has Candidate Chunks?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1024,
-        256
+        -400,
+        560
       ]
     },
     {
@@ -453,13 +897,13 @@
           "binaryPropertyName": "data"
         }
       },
-      "id": "9b07cd0b-9415-45b5-95c2-e70e1995afe4",
+      "id": "24e3e4a8-c090-4b01-8fee-49ff5ff37474",
       "name": "Upload Document",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        0,
-        832
+        -1648,
+        1344
       ],
       "webhookId": "b6e4c3e9-6b51-46fa-b71a-351a25834555"
     },
@@ -474,13 +918,13 @@
         "embeddingBatchSize": 50,
         "options": {}
       },
-      "id": "5079f02b-ea12-4a59-b3d9-e57429f7418e",
+      "id": "d82a7a24-aedb-4bae-b338-65d972c29616",
       "name": "Store in Qdrant",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "typeVersion": 1.3,
       "position": [
-        256,
-        624
+        -720,
+        944
       ],
       "credentials": {
         "qdrantApi": {
@@ -496,13 +940,13 @@
           "provider": "auto"
         }
       },
-      "id": "063e2bc0-8ad6-4050-b690-68f6a710bc19",
+      "id": "67e17817-150e-45e6-bfe3-b6a8788609e2",
       "name": "HuggingFace Embeddings (Ingest)",
       "type": "@n8n/n8n-nodes-langchain.embeddingsHuggingFaceInference",
       "typeVersion": 1,
       "position": [
-        224,
-        848
+        -752,
+        1168
       ],
       "credentials": {
         "huggingFaceApi": {
@@ -541,13 +985,13 @@
           }
         }
       },
-      "id": "0e2ccb6c-3a45-4816-a861-02fe301a805e",
+      "id": "28d55b4a-10ed-43b6-9f2d-09738fcc37c4",
       "name": "Load Uploaded Document",
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1.1,
       "position": [
-        352,
-        848
+        -624,
+        1168
       ]
     },
     {
@@ -555,13 +999,13 @@
         "chunkOverlap": 150,
         "options": {}
       },
-      "id": "2f98ad4b-3368-4aa0-9d74-cdf298a6dcd7",
+      "id": "13451868-1f6f-49ea-93dc-008a8597e309",
       "name": "Chunk Splitter",
       "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
       "typeVersion": 1,
       "position": [
-        432,
-        1056
+        -544,
+        1376
       ]
     },
     {
@@ -587,13 +1031,13 @@
         },
         "options": {}
       },
-      "id": "1e2ec031-2a44-40ef-8f39-396fc77a8cb7",
+      "id": "f5195530-71ca-4c0d-9015-510a16383b31",
       "name": "Verify Insert Succeeded",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        720,
-        832
+        -256,
+        1152
       ]
     },
     {
@@ -607,13 +1051,13 @@
           "responseCode": 200
         }
       },
-      "id": "6cee1346-0f65-471e-aded-c333bc471d06",
+      "id": "2789c936-8cf7-41b6-8ede-a91cc3f127c8",
       "name": "Respond Success",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        944,
-        736
+        -32,
+        1056
       ]
     },
     {
@@ -624,28 +1068,13 @@
           "responseCode": 500
         }
       },
-      "id": "383f1099-022a-493b-a32d-9312e249d3b6",
+      "id": "80b1a293-6187-41a6-a20a-33bcf1376b2d",
       "name": "Respond Error",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        944,
-        928
-      ]
-    },
-    {
-      "parameters": {
-        "content": "## Ingestion pipeline (was: RAG Ingestion Workflow). POST multipart form data, field name \"data\", to this workflow's Upload Document webhook. Supported: PDF, DOCX, TXT, Markdown.",
-        "width": 300,
-        "color": 4
-      },
-      "id": "5974e445-1f39-4767-8789-d30238644ee1",
-      "name": "Ingestion Setup Note",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -336,
-        608
+        -32,
+        1248
       ]
     },
     {
@@ -654,13 +1083,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "3f75a727-d696-4f93-bd82-e8e40e4c751c",
+      "id": "1b09ae9e-487e-4933-9a32-05a7367b81ec",
       "name": "List Documents",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        0,
-        1264
+        -1648,
+        1760
       ],
       "webhookId": "a34b5109-7818-46d7-926a-88dab6ad233f"
     },
@@ -675,13 +1104,13 @@
         "jsonBody": "={{ { \"limit\": 1000, \"with_payload\": true, \"with_vector\": false } }}",
         "options": {}
       },
-      "id": "0679c6f3-1595-4eaa-921d-8bb80a278c0e",
+      "id": "2b04acec-a7b3-40ba-a4da-520ba1e68769",
       "name": "Scroll Qdrant Points",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        224,
-        1264
+        -1200,
+        1664
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -694,13 +1123,13 @@
       "parameters": {
         "jsCode": "const response = $input.first().json;\nconst points = (response.result && response.result.points) || [];\n\nconst bySource = {};\nfor (const point of points) {\n  const payload = point.payload || {};\n  const meta = payload.metadata || payload;\n  const source = meta.source || 'unknown source';\n  if (!bySource[source]) {\n    bySource[source] = {\n      source: source,\n      sections: new Set(),\n      updatedAt: meta.updated_at || null,\n      chunkCount: 0\n    };\n  }\n  const entry = bySource[source];\n  entry.chunkCount += 1;\n  if (meta.section) entry.sections.add(meta.section);\n  if (meta.updated_at && (!entry.updatedAt || meta.updated_at > entry.updatedAt)) {\n    entry.updatedAt = meta.updated_at;\n  }\n}\n\nconst documents = Object.values(bySource).map(function (entry) {\n  return {\n    source: entry.source,\n    sectionCount: entry.sections.size,\n    chunkCount: entry.chunkCount,\n    updatedAt: entry.updatedAt\n  };\n}).sort(function (a, b) {\n  return (b.updatedAt || '').localeCompare(a.updatedAt || '');\n});\n\nreturn [{ json: { documents: documents, count: documents.length } }];"
       },
-      "id": "151412ba-b002-4d24-8741-0313d2e34ac8",
+      "id": "74c8fcf7-cefc-4c7c-837f-1d237902067a",
       "name": "Aggregate By Source",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        448,
-        1264
+        -976,
+        1664
       ]
     },
     {
@@ -709,28 +1138,13 @@
           "responseCode": 200
         }
       },
-      "id": "49a55b25-fde3-4ec4-baa3-75974d2863bb",
+      "id": "f3ed0da2-dc33-4e93-ae0a-a650274bd7e5",
       "name": "Respond With Documents",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        672,
-        1264
-      ]
-    },
-    {
-      "parameters": {
-        "content": "## List Documents pipeline (was: RAG List Documents Workflow). GET this workflow's List Documents webhook - returns ingested documents aggregated by source. NOTE: the Scroll Qdrant Points node's credential did not carry over automatically - link the \"RAG (Qdrant)\" httpHeaderAuth credential to it manually.",
-        "width": 300,
-        "color": 6
-      },
-      "id": "7356b5bb-b46c-450c-b9d6-d6d30c745eaa",
-      "name": "List Documents Setup Note",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        944,
-        1568
+        -752,
+        1664
       ]
     },
     {
@@ -756,13 +1170,13 @@
         },
         "options": {}
       },
-      "id": "29d6325b-ba7e-4f12-a8f7-e156e5f34270",
+      "id": "04bb3719-2ab4-4c09-9976-1aeff8646c6a",
       "name": "Is Load Previous Session?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        224,
-        160
+        -1200,
+        464
       ]
     },
     {
@@ -773,13 +1187,13 @@
           "responseCode": 200
         }
       },
-      "id": "de749f0c-c612-4001-9711-d2658b70f866",
+      "id": "c220eb7f-444f-4ec9-9474-a7e714c111ff",
       "name": "Respond: Empty History",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        448,
-        64
+        -976,
+        368
       ]
     },
     {
@@ -796,13 +1210,13 @@
         },
         "options": {}
       },
-      "id": "a572f53d-2f57-43d6-96c5-102d6f93ca48",
+      "id": "63cc3180-68b1-4e5c-b3a3-470adc72d734",
       "name": "Reply: Answer",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2720,
-        112
+        1296,
+        416
       ]
     },
     {
@@ -819,13 +1233,13 @@
         },
         "options": {}
       },
-      "id": "5a3a8b26-7bf4-4d31-b0b0-46ba48b009c2",
+      "id": "9676e4c1-c595-4a7f-9c1e-5df719bd0a82",
       "name": "Reply: Refusal",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2720,
-        400
+        1296,
+        720
       ]
     },
     {
@@ -852,13 +1266,13 @@
         },
         "options": {}
       },
-      "id": "679f4806-e259-44e2-abbc-6cd460b926b7",
+      "id": "5e975c89-1915-429a-991d-8d58c2fbc0d7",
       "name": "Confidence Check (>= 0.45)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1696,
-        256
+        272,
+        560
       ]
     },
     {
@@ -867,13 +1281,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "bcb88cb5-6be5-498b-b673-f4ea500d0afe",
+      "id": "83ab5d0f-daf1-45c7-bc7b-3db457455291",
       "name": "Dashboard Stats Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        1568,
-        1280
+        -1648,
+        2272
       ],
       "webhookId": "c2e2b2b2-2222-4b2b-9b2b-222222222222"
     },
@@ -883,13 +1297,13 @@
         "query": "SELECT json_build_object(\n  'summary', (\n    SELECT json_build_object(\n      'total', count(*),\n      'answered', count(*) FILTER (WHERE outcome = 'answered'),\n      'refused', count(*) FILTER (WHERE outcome = 'refused'),\n      'refusalRate', round((count(*) FILTER (WHERE outcome = 'refused'))::numeric / GREATEST(count(*), 1), 4),\n      'avgLatencyMs', round(avg(latency_ms)),\n      'p50LatencyMs', round(percentile_cont(0.5) WITHIN GROUP (ORDER BY latency_ms)),\n      'p95LatencyMs', round(percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms)),\n      'avgConfidence', round(avg(confidence_score)::numeric, 4)\n    )\n    FROM query_logs\n  ),\n  'daily', (\n    SELECT COALESCE(json_agg(d ORDER BY d.day), '[]'::json)\n    FROM (\n      SELECT\n        to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,\n        count(*) AS total,\n        count(*) FILTER (WHERE outcome = 'refused') AS refused\n      FROM query_logs\n      WHERE created_at > now() - interval '30 days'\n      GROUP BY 1\n    ) d\n  ),\n  'recent', (\n    SELECT COALESCE(json_agg(r), '[]'::json)\n    FROM (\n      SELECT created_at, question, outcome, confidence_score, latency_ms\n      FROM query_logs\n      ORDER BY created_at DESC\n      LIMIT 20\n    ) r\n  )\n) AS stats;",
         "options": {}
       },
-      "id": "104a6bf7-4490-473a-a0c2-960947a98e12",
+      "id": "6196eb85-4cbf-4d5f-ad09-d13c0c876e1e",
       "name": "Query Stats (Neon)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1792,
-        1280
+        -976,
+        2080
       ],
       "credentials": {
         "postgres": {
@@ -904,48 +1318,40 @@
         "responseBody": "={{ $json.stats }}",
         "options": {}
       },
-      "id": "8f3f7bea-841d-42a9-9855-b258ef32e2c0",
+      "id": "6ba99c01-454f-4df8-b255-a1e055b389a3",
       "name": "Respond With Stats",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        2016,
-        1280
+        -752,
+        2080
       ]
     },
     {
-      "id": "63a87079-64e8-41e7-bfd5-0f16cca846ae",
-      "name": "JWT Verify (Chat)",
-      "type": "n8n-nodes-base.jwt",
-      "typeVersion": 1,
-      "position": [
-        140,
-        160
-      ],
-      "onError": "continueErrorOutput",
-      "credentials": {
-        "jwtAuth": {
-          "id": "PLACEHOLDER_JWT_CRED_ID",
-          "name": "RAG JWT"
-        }
-      },
       "parameters": {
         "operation": "verify",
         "token": "={{ $('Chat Trigger').item.json.token || '' }}",
         "options": {
           "algorithm": "HS256"
         }
-      }
+      },
+      "id": "6442237d-bf37-42d0-8d71-90f8bec3dc65",
+      "name": "JWT Verify (Chat)",
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        -1424,
+        560
+      ],
+      "credentials": {
+        "jwtAuth": {
+          "id": "ES6QZ4RivDaxvKn5",
+          "name": "RAG JWT"
+        }
+      },
+      "onError": "continueErrorOutput"
     },
     {
-      "id": "71836dca-131a-4639-9fce-e9430c0e408f",
-      "name": "Reply: Unauthorized (Chat)",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        140,
-        320
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -958,57 +1364,58 @@
           ]
         },
         "options": {}
-      }
+      },
+      "id": "26cfc178-5adc-40e4-af49-39696fe89d9f",
+      "name": "Reply: Unauthorized (Chat)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1200,
+        656
+      ]
     },
     {
-      "id": "24164c29-1a77-44c8-a5ca-f86aafe39314",
-      "name": "JWT Verify (Upload)",
-      "type": "n8n-nodes-base.jwt",
-      "typeVersion": 1,
-      "position": [
-        140,
-        832
-      ],
-      "onError": "continueErrorOutput",
-      "credentials": {
-        "jwtAuth": {
-          "id": "PLACEHOLDER_JWT_CRED_ID",
-          "name": "RAG JWT"
-        }
-      },
       "parameters": {
         "operation": "verify",
         "token": "={{ ($('Upload Document').item.json.headers.authorization || '').replace('Bearer ', '') }}",
         "options": {
           "algorithm": "HS256"
         }
-      }
+      },
+      "id": "8bd4ae60-c5ab-412a-80d3-ebeeab17eb5c",
+      "name": "JWT Verify (Upload)",
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        -1424,
+        1344
+      ],
+      "credentials": {
+        "jwtAuth": {
+          "id": "ES6QZ4RivDaxvKn5",
+          "name": "RAG JWT"
+        }
+      },
+      "onError": "continueErrorOutput"
     },
     {
-      "id": "8afb23ea-5215-48e7-8607-5a2c51a19699",
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": \"Sign in required\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "990e55f6-4147-4b71-8fbe-08d2a42fc1fb",
       "name": "Respond Unauthorized (Upload)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        140,
-        1032
-      ],
-      "parameters": {
-        "respondWith": "json",
-        "responseCode": 401,
-        "responseBody": "={{ { \"error\": \"Sign in required\" } }}",
-        "options": {}
-      }
+        -1200,
+        1440
+      ]
     },
     {
-      "id": "e93b6768-2ab7-4a1e-8d59-657368f8983c",
-      "name": "Is Admin (Upload)?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        280,
-        832
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -1030,66 +1437,379 @@
           "combinator": "and"
         },
         "options": {}
-      }
+      },
+      "id": "78ae5eff-72d3-4de8-a261-bb7ebc4af49d",
+      "name": "Is Admin (Upload)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1200,
+        1248
+      ]
     },
     {
-      "id": "2e1cfe0a-7210-4a27-b0e6-aada88aac03c",
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": \"Only admins can upload documents\" } }}",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "id": "ede4bed3-ca39-48b2-b03e-2e053273e4ce",
       "name": "Respond Forbidden (Upload)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        420,
-        932
-      ],
-      "parameters": {
-        "respondWith": "json",
-        "responseCode": 403,
-        "responseBody": "={{ { \"error\": \"Only admins can upload documents\" } }}",
-        "options": {}
-      }
+        -976,
+        1344
+      ]
     },
     {
-      "id": "9d2e79fa-a654-4ffa-a0ae-16d1f371b8bc",
-      "name": "JWT Verify (List Documents)",
-      "type": "n8n-nodes-base.jwt",
-      "typeVersion": 1,
-      "position": [
-        140,
-        1264
-      ],
-      "onError": "continueErrorOutput",
-      "credentials": {
-        "jwtAuth": {
-          "id": "PLACEHOLDER_JWT_CRED_ID",
-          "name": "RAG JWT"
-        }
-      },
       "parameters": {
         "operation": "verify",
         "token": "={{ ($('List Documents').item.json.headers.authorization || '').replace('Bearer ', '') }}",
         "options": {
           "algorithm": "HS256"
         }
-      }
+      },
+      "id": "76bc9f2f-44e3-498a-b98c-cfac2191342e",
+      "name": "JWT Verify (List Documents)",
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        -1424,
+        1760
+      ],
+      "credentials": {
+        "jwtAuth": {
+          "id": "ES6QZ4RivDaxvKn5",
+          "name": "RAG JWT"
+        }
+      },
+      "onError": "continueErrorOutput"
     },
     {
-      "id": "8cdb1c98-c6f4-4446-9b26-1e8acac07a64",
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": \"Sign in required\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "b41ca7af-5897-4559-8ae8-a3db26ff7667",
       "name": "Respond Unauthorized (List Documents)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        140,
-        1464
+        -1200,
+        1856
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "verify",
+        "token": "={{ ($('Dashboard Stats Webhook').item.json.headers.authorization || '').replace('Bearer ', '') }}",
+        "options": {
+          "algorithm": "HS256"
+        }
+      },
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        -1424,
+        2272
       ],
+      "id": "359deea2-a89b-43fc-9d3b-f1ddca4e0a05",
+      "name": "JWT",
+      "alwaysOutputData": false,
+      "credentials": {
+        "jwtAuth": {
+          "id": "ES6QZ4RivDaxvKn5",
+          "name": "RAG JWT"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5a465376-933a-42cf-9a30-73e9258e3572",
+              "leftValue": "={{ $json.payload.role }}",
+              "rightValue": "admin",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1200,
+        2176
+      ],
+      "id": "bf8f9924-9210-4dc9-84d9-978fa2dcf712",
+      "name": "Is Admin (Dashboard)?"
+    },
+    {
       "parameters": {
         "respondWith": "json",
-        "responseCode": 401,
+        "responseBody": "={{ { \"error\": \"Admin access required\" } }}",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -976,
+        2272
+      ],
+      "id": "3c66886b-d7db-4d2e-95ca-1afb8875b7eb",
+      "name": "Respond Forbidden (Dashboard)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
         "responseBody": "={{ { \"error\": \"Sign in required\" } }}",
-        "options": {}
-      }
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1200,
+        2368
+      ],
+      "id": "df5141cf-9e50-400b-87b6-6f67de88f379",
+      "name": "Respond Unauthorized (Dashboard)"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => ({\n     json: item.json,\n     binary: $('Upload Document').item.binary,\n   }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        1152
+      ],
+      "id": "a980b132-3cf2-4f0b-a42a-c2753819fb58",
+      "name": "Reattach Upload Binary"
     }
   ],
   "connections": {
+    "Signup Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check Email Exists (Signup)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Email Exists (Signup)": {
+      "main": [
+        [
+          {
+            "node": "Email Taken?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Taken?": {
+      "main": [
+        [
+          {
+            "node": "Respond Email Taken",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Salt (Signup)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Salt (Signup)": {
+      "main": [
+        [
+          {
+            "node": "Hash Password (Signup)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash Password (Signup)": {
+      "main": [
+        [
+          {
+            "node": "Insert User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert User": {
+      "main": [
+        [
+          {
+            "node": "Sign JWT (Signup)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign JWT (Signup)": {
+      "main": [
+        [
+          {
+            "node": "Shape Signup Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape Signup Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Signup Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Login Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check User Exists (Login)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check User Exists (Login)": {
+      "main": [
+        [
+          {
+            "node": "User Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Exists?": {
+      "main": [
+        [
+          {
+            "node": "Respond Invalid Login",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch User (Login)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch User (Login)": {
+      "main": [
+        [
+          {
+            "node": "Hash Submitted Password (Login)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash Submitted Password (Login)": {
+      "main": [
+        [
+          {
+            "node": "Password Correct?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Password Correct?": {
+      "main": [
+        [
+          {
+            "node": "Sign JWT (Login)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Invalid Login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign JWT (Login)": {
+      "main": [
+        [
+          {
+            "node": "Shape Login Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape Login Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Login Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Normalize Question": {
       "main": [
         [
@@ -1270,13 +1990,6 @@
             "type": "main",
             "index": 0
           }
-        ],
-        [
-          {
-            "node": "Verify Insert Succeeded",
-            "type": "main",
-            "index": 0
-          }
         ]
       ]
     },
@@ -1415,7 +2128,7 @@
       "main": [
         [
           {
-            "node": "Query Stats (Neon)",
+            "node": "JWT",
             "type": "main",
             "index": 0
           }
@@ -1473,7 +2186,7 @@
       "main": [
         [
           {
-            "node": "Store in Qdrant",
+            "node": "Reattach Upload Binary",
             "type": "main",
             "index": 0
           }
@@ -1499,6 +2212,53 @@
         [
           {
             "node": "Respond Unauthorized (List Documents)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JWT": {
+      "main": [
+        [
+          {
+            "node": "Is Admin (Dashboard)?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Unauthorized (Dashboard)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Admin (Dashboard)?": {
+      "main": [
+        [
+          {
+            "node": "Query Stats (Neon)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Forbidden (Dashboard)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reattach Upload Binary": {
+      "main": [
+        [
+          {
+            "node": "Store in Qdrant",
             "type": "main",
             "index": 0
           }

@@ -66,7 +66,7 @@ Hybrid (vector + keyword) retrieval from FR-6 is also not implemented — retrie
 
 - `frontend/` — the Vite/React app (landing, chat, upload, library, dashboard pages). See [frontend/README.md](frontend/README.md) for local setup and env vars.
 - `seed/` — standalone Node scripts (`ingest.js`, `query.js`) that chunk sample markdown docs, embed them via the HF API, and upsert/query a local Qdrant instance, plus the [seed/eval/](seed/eval/) eval harness used for [SCORECARD.md](SCORECARD.md). Useful for testing retrieval/eval in isolation, without touching the production n8n workflow or its Qdrant collection.
-- `n8n/` — exported n8n workflow JSON, importable via n8n's "Import from File": `dashboard-stats-workflow.json`, `auth-workflow.json` (sign up / login), and `combined-workflow-rbac.json` (the main query/ingestion workflow with RBAC gates added — see [RBAC-SETUP.md](RBAC-SETUP.md) for how to apply it).
+- `n8n/` — `mimo-workflow.json`, the exported n8n workflow (auth, chat, upload, library, dashboard stats, all RBAC-gated), importable via n8n's "Import from File" — see [RBAC-SETUP.md](RBAC-SETUP.md) for how to apply it — plus `generate-secrets.js` for generating the JWT/pepper secrets it needs.
 - `PRD-RAG-Internal-Assistant.md` — full requirements doc.
 - `RBAC-SETUP.md` — manual n8n-side setup steps for the auth/RBAC system (credentials, workflow import, first-admin promotion).
 

@@ -23,30 +23,18 @@ Run this yourself — it generates fresh random secrets locally and only prints 
 - HMAC Secret: the "Password pepper" value from step 1
 - (leave other fields at their defaults)
 
-## 3. Import the Auth workflow
+## 3. Import the workflow
 
-- Workflows → Import from File → `n8n/auth-workflow.json`
-- It has two JWT nodes ("Sign JWT (Signup)", "Sign JWT (Login)") referencing a placeholder credential ID — n8n should prompt you to pick a real credential of the same type; choose **RAG JWT** for both.
-- It also has two Crypto nodes ("Hash Password (Signup)", "Hash Submitted Password (Login)") that need **RAG Password Pepper**.
-- The Postgres nodes should already point at your existing **RAG Neon** credential (same ID reused from your other workflows) — confirm they show as connected, not blank.
-- Activate the workflow, then **Publish** (Save alone isn't enough for an active workflow, as we found out earlier).
+- Workflows → Import from File → `n8n/mimo-workflow.json`. This is the single workflow that handles auth (signup/login), chat, upload, library listing, and the dashboard stats endpoint — all under one webhook-bearing canvas.
+- Remap credentials where n8n prompts for them:
+  - JWT nodes (`Sign JWT (Signup)`, `Sign JWT (Login)`, `JWT Verify (Chat)`, `JWT Verify (Upload)`, `JWT Verify (List Documents)`, `JWT` on the dashboard branch) → **RAG JWT**.
+  - Crypto nodes (`Hash Password (Signup)`, `Hash Submitted Password (Login)`, `Generate Salt (Signup)`) → **RAG Password Pepper**.
+  - Postgres/Qdrant/HuggingFace/Groq nodes → your existing credentials of those types.
+- Activate the workflow, then **Publish** — Save alone does not push changes live; publishing is a separate, explicit step, and only the published version serves webhook traffic.
 
-## 4. Replace the combined workflow
+## 4. Sign up and get promoted to admin
 
-- Open the existing **Mimo RAG - Combined Workflow** (the one already running your chat/upload/library traffic).
-- Use its **Import from File** option (not "create new") and select `n8n/combined-workflow-rbac.json` — this replaces the canvas contents of that *same* workflow (same ID, same webhook paths), rather than creating a duplicate. A duplicate would collide on webhook paths since the trigger nodes' IDs are unchanged.
-- Remap credentials the same way: the new JWT nodes ("JWT Verify (Chat)", "JWT Verify (Upload)", "JWT Verify (List Documents)") → **RAG JWT**.
-- Save, confirm it's still Active, then **Publish**.
-
-## 5. Update the Dashboard Stats workflow
-
-- Same idea: open **Mimo RAG - Dashboard Stats**, Import from File → `n8n/dashboard-stats-workflow.json` (already updated in place — it now includes a JWT gate).
-- Remap the new "JWT Verify (Dashboard)" node → **RAG JWT**.
-- Save, Activate if needed, **Publish**.
-
-## 6. Sign up and get promoted to admin
-
-- Once the Auth workflow is live, sign up for an account through the actual app at `/signup`.
+- Once the workflow is live, sign up for an account through the actual app at `/signup`.
 - Tell me the email you used and I'll run one SQL command against the `users` table in Neon to set your account's role to `admin` (new accounts default to `member`).
 
 ## What this gets you
@@ -61,3 +49,4 @@ Run this yourself — it generates fresh random secrets locally and only prints 
 - No password reset flow, no email verification, no rate-limiting on login attempts.
 - Roles are just `admin`/`member` — no per-document custom ACLs beyond the one visibility bit.
 - Promoting a user to admin is a manual SQL step for now, not an admin UI.
+- Auth, chat/upload/library, and the dashboard all live on one workflow canvas rather than three separate workflows — n8n's "Import from File" adds nodes to whatever canvas is open rather than replacing it, so keeping this as one file avoids that trap. Functionally equivalent either way, since webhook routing is per-trigger-node, not per-workflow.
