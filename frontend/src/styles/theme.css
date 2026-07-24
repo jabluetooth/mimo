@@ -1316,38 +1316,16 @@ code {
 }
 
 .chat-input-bar {
-  position: relative;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 16px;
-  padding: 6px 6px 6px 24px;
+  padding: 6px 6px 6px 18px;
   background: var(--glass-panel-strong);
   border: 1px solid var(--glass-border-warm);
   border-radius: 999px;
   box-shadow: var(--shadow-sm);
-}
-
-/* The native text caret is a hairline that's easy to miss, so the focus
-   indicator is this explicit, width-controlled vertical bar instead —
-   shown for as long as the input has focus, not just a blink cycle. */
-.chat-input-bar::before {
-  content: '';
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2px;
-  height: 20px;
-  border-radius: 1px;
-  background: var(--accent-raw);
-  opacity: 0;
-  transition: opacity 0.12s ease;
-}
-
-.chat-input-bar:focus-within::before {
-  opacity: 1;
 }
 
 .chat-input-bar input {
