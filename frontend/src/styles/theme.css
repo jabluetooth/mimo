@@ -1099,6 +1099,41 @@ code {
   }
 }
 
+.chat-shell--empty {
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.chat-empty-state {
+  max-width: 40ch;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chat-empty-eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+
+.chat-empty-state h2 {
+  margin: 0 0 12px;
+  font-size: 26px;
+}
+
+.chat-empty-body {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .chat-transcript {
   flex: 1;
   overflow-y: auto;

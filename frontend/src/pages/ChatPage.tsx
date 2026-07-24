@@ -1,20 +1,34 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const CHAT_WEBHOOK_URL = import.meta.env.VITE_CHAT_WEBHOOK_URL;
+const LIST_DOCUMENTS_URL = import.meta.env.VITE_LIST_DOCUMENTS_URL;
 
 const WELCOME =
   'Ask me anything covered by the internal knowledge base — I will cite my sources, or tell you plainly when I do not know.';
 
-// Real, answerable questions pulled from the actual ingested corpus (the
-// same set used in the eval scorecard) rather than generic placeholder
-// prompts — clicking one is guaranteed to demonstrate a real grounded
-// answer, not a refusal.
-const SUGGESTIONS = [
-  "What's our refund policy for enterprise clients?",
-  "What's the process for requesting time off during a client engagement?",
-  'Summarize what changed in the vendor contract from Q1 to Q2.',
-  'How long does vendor onboarding typically take?',
-];
+type LibraryDoc = { source: string; sectionCount: number; chunkCount: number; updatedAt: string | null };
+
+type LibraryState =
+  | { kind: 'checking' }
+  | { kind: 'empty' }
+  | { kind: 'ready'; documents: LibraryDoc[] }
+  | { kind: 'unknown' }; // couldn't check — don't block chat over it, just skip suggestions
+
+// A human-readable label from a filename: "refund-policy.md" -> "refund policy".
+function labelForSource(source: string): string {
+  return source
+    .replace(/\.[a-z0-9]+$/i, '')
+    .replace(/[-_]+/g, ' ')
+    .trim();
+}
+
+// Suggestions are generated from whatever is actually in the library, not a
+// fixed list — a fixed list would suggest questions about documents that
+// don't exist for anyone who hasn't uploaded the same eval corpus.
+function suggestionsFromDocuments(documents: LibraryDoc[]): string[] {
+  return documents.slice(0, 4).map((d) => `What does ${labelForSource(d.source)} cover?`);
+}
 
 type Citation = { marker: string; source: string; section: string; updatedAt: string };
 
@@ -142,8 +156,36 @@ export default function ChatPage() {
   const [turns, setTurns] = useState<Turn[]>([{ role: 'assistant', kind: 'welcome', text: WELCOME }]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [library, setLibrary] = useState<LibraryState>({ kind: 'checking' });
   const transcriptRef = useRef<HTMLDivElement>(null);
   const sessionId = useMemo(() => crypto.randomUUID(), []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkLibrary() {
+      if (!LIST_DOCUMENTS_URL) {
+        if (!cancelled) setLibrary({ kind: 'unknown' });
+        return;
+      }
+      try {
+        const response = await fetch(LIST_DOCUMENTS_URL);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload: { documents: LibraryDoc[] } = await response.json();
+        const documents = payload.documents ?? [];
+        if (!cancelled) setLibrary(documents.length === 0 ? { kind: 'empty' } : { kind: 'ready', documents });
+      } catch {
+        if (!cancelled) setLibrary({ kind: 'unknown' });
+      }
+    }
+
+    checkLibrary();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const suggestions = library.kind === 'ready' ? suggestionsFromDocuments(library.documents) : [];
 
   useEffect(() => {
     transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: 'smooth' });
@@ -195,6 +237,25 @@ export default function ChatPage() {
     void sendQuestion(input.trim());
   }
 
+  if (library.kind === 'empty') {
+    return (
+      <div className="chat-shell chat-shell--empty">
+        <h1 className="visually-hidden">Chat with the knowledge assistant</h1>
+        <div className="chat-empty-state">
+          <p className="chat-empty-eyebrow">Nothing to chat about yet</p>
+          <h2>Your knowledge base is empty</h2>
+          <p className="chat-empty-body">
+            Mimo answers questions from documents you've uploaded — there aren't any yet, so there's nothing to
+            ground an answer in. Upload a document first, then come back here to ask about it.
+          </p>
+          <Link to="/upload" className="primary-button cta-button">
+            Upload a document
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="chat-shell">
       <h1 className="visually-hidden">Chat with the knowledge assistant</h1>
@@ -212,15 +273,10 @@ export default function ChatPage() {
           </div>
         ))}
 
-        {turns.length === 1 && !isThinking && (
+        {turns.length === 1 && !isThinking && suggestions.length > 0 && (
           <div className="suggestion-chips">
-            {SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                className="suggestion-chip"
-                onClick={() => sendQuestion(s)}
-              >
+            {suggestions.map((s) => (
+              <button key={s} type="button" className="suggestion-chip" onClick={() => sendQuestion(s)}>
                 {s}
               </button>
             ))}
