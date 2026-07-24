@@ -11,6 +11,7 @@ type Summary = {
   p50LatencyMs: number;
   p95LatencyMs: number;
   avgConfidence: number;
+  borderlineCount: number;
 };
 
 type DailyPoint = { day: string; total: number; refused: number };
@@ -30,6 +31,15 @@ type State =
   | { kind: 'error'; message: string }
   | { kind: 'loaded'; stats: Stats };
 
+const TIME_RANGES = [
+  { label: '7d', days: 7 },
+  { label: '30d', days: 30 },
+  { label: '90d', days: 90 },
+  { label: 'All', days: null as number | null },
+];
+
+type SortKey = 'time' | 'confidence' | 'latency';
+
 function formatDay(iso: string): string {
   const date = new Date(`${iso}T00:00:00Z`);
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
@@ -46,10 +56,10 @@ function formatTimestamp(iso: string): string {
   });
 }
 
-// Custom SVG bar chart rather than a charting library — two stacked series
-// (answered/refused) per day, 2px gap between segments, rounded outer caps,
-// hover+focus tooltip. See dataviz notes: sequential/status color, not a
-// cycled categorical palette, since these are two fixed named states.
+// Custom SVG bar chart — two stacked series (answered/refused) per day, 2px
+// gap between segments, rounded outer caps, hover+focus tooltip. See dataviz
+// notes: status color, not a cycled categorical palette, since these are two
+// fixed named states.
 function DailyVolumeChart({ daily }: { daily: DailyPoint[] }) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const width = 640;
@@ -63,86 +73,147 @@ function DailyVolumeChart({ daily }: { daily: DailyPoint[] }) {
   const barWidth = daily.length > 0 ? Math.min(48, plotWidth / daily.length - barGap) : 0;
 
   return (
-    <div className="chart-wrap">
-      <div className="chart-legend" aria-hidden="true">
-        <span className="legend-item">
-          <span className="legend-swatch legend-swatch--answered" /> Answered
-        </span>
-        <span className="legend-item">
-          <span className="legend-swatch legend-swatch--refused" /> Refused
-        </span>
-      </div>
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        role="img"
-        aria-label="Daily query volume, split into answered and refused"
-        className="daily-chart"
-      >
-        {daily.map((d, i) => {
-          const answered = d.total - d.refused;
-          const x = padding.left + i * (plotWidth / daily.length) + barGap / 2;
-          const answeredHeight = (answered / maxTotal) * plotHeight;
-          const refusedHeight = (d.refused / maxTotal) * plotHeight;
-          const gap = answered > 0 && d.refused > 0 ? 2 : 0;
-          const baseY = padding.top + plotHeight;
-          const answeredY = baseY - answeredHeight;
-          const refusedY = answeredY - gap - refusedHeight;
-          const isHovered = hoverIndex === i;
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label="Daily query volume, split into answered and refused"
+      className="daily-chart"
+    >
+      {daily.map((d, i) => {
+        const answered = d.total - d.refused;
+        const x = padding.left + i * (plotWidth / daily.length) + barGap / 2;
+        const answeredHeight = (answered / maxTotal) * plotHeight;
+        const refusedHeight = (d.refused / maxTotal) * plotHeight;
+        const gap = answered > 0 && d.refused > 0 ? 2 : 0;
+        const baseY = padding.top + plotHeight;
+        const answeredY = baseY - answeredHeight;
+        const refusedY = answeredY - gap - refusedHeight;
+        const isHovered = hoverIndex === i;
 
-          return (
-            <g
-              key={d.day}
-              tabIndex={0}
-              role="button"
-              aria-label={`${formatDay(d.day)}: ${answered} answered, ${d.refused} refused`}
-              onMouseEnter={() => setHoverIndex(i)}
-              onMouseLeave={() => setHoverIndex(null)}
-              onFocus={() => setHoverIndex(i)}
-              onBlur={() => setHoverIndex(null)}
-              style={{ cursor: 'pointer', outline: 'none' }}
-            >
-              {/* Wider invisible hit target, easier than the thin bar itself to hover/focus */}
-              <rect x={x - 4} y={padding.top} width={barWidth + 8} height={plotHeight} fill="transparent" />
-              {answered > 0 && (
-                <rect
-                  x={x}
-                  y={answeredY}
-                  width={barWidth}
-                  height={answeredHeight}
-                  rx={4}
-                  className="bar-segment bar-segment--answered"
-                  opacity={isHovered ? 1 : 0.9}
-                />
-              )}
-              {d.refused > 0 && (
-                <rect
-                  x={x}
-                  y={refusedY}
-                  width={barWidth}
-                  height={refusedHeight}
-                  rx={4}
-                  className="bar-segment bar-segment--refused"
-                  opacity={isHovered ? 1 : 0.9}
-                />
-              )}
-              <text x={x + barWidth / 2} y={height - 8} textAnchor="middle" className="chart-axis-label">
-                {formatDay(d.day)}
-              </text>
-              {isHovered && (
-                <g transform={`translate(${x + barWidth / 2}, ${Math.min(refusedY, answeredY) - 8})`}>
-                  <foreignObject x={-70} y={-46} width={140} height={40}>
-                    <div className="chart-tooltip">
-                      <strong>{formatDay(d.day)}</strong>
-                      <span>{answered} answered · {d.refused} refused</span>
-                    </div>
-                  </foreignObject>
-                </g>
-              )}
+        return (
+          <g
+            key={d.day}
+            tabIndex={0}
+            role="button"
+            aria-label={`${formatDay(d.day)}: ${answered} answered, ${d.refused} refused`}
+            onMouseEnter={() => setHoverIndex(i)}
+            onMouseLeave={() => setHoverIndex(null)}
+            onFocus={() => setHoverIndex(i)}
+            onBlur={() => setHoverIndex(null)}
+            style={{ cursor: 'pointer', outline: 'none' }}
+          >
+            <rect x={x - 4} y={padding.top} width={barWidth + 8} height={plotHeight} fill="transparent" />
+            {answered > 0 && (
+              <rect
+                x={x}
+                y={answeredY}
+                width={barWidth}
+                height={answeredHeight}
+                rx={4}
+                className="bar-segment bar-segment--answered"
+                opacity={isHovered ? 1 : 0.9}
+              />
+            )}
+            {d.refused > 0 && (
+              <rect
+                x={x}
+                y={refusedY}
+                width={barWidth}
+                height={refusedHeight}
+                rx={4}
+                className="bar-segment bar-segment--refused"
+                opacity={isHovered ? 1 : 0.9}
+              />
+            )}
+            <text x={x + barWidth / 2} y={height - 8} textAnchor="middle" className="chart-axis-label">
+              {formatDay(d.day)}
+            </text>
+            {isHovered && (
+              <g transform={`translate(${x + barWidth / 2}, ${Math.min(refusedY, answeredY) - 8})`}>
+                <foreignObject x={-70} y={-46} width={140} height={40}>
+                  <div className="chart-tooltip">
+                    <strong>{formatDay(d.day)}</strong>
+                    <span>
+                      {answered} answered · {d.refused} refused
+                    </span>
+                  </div>
+                </foreignObject>
+              </g>
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// A second lens on the same daily data: refusal rate as a percentage over
+// time. The PRD calls this out explicitly (§6.5) — "a rising trend signals a
+// knowledge-base gap" — which a stacked-volume view doesn't show directly
+// once absolute volume also changes day to day.
+function RefusalRateChart({ daily }: { daily: DailyPoint[] }) {
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const width = 640;
+  const height = 200;
+  const padding = { top: 12, right: 12, bottom: 28, left: 32 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+
+  const points = daily.map((d, i) => {
+    const rate = d.total > 0 ? d.refused / d.total : 0;
+    const x = padding.left + (daily.length === 1 ? plotWidth / 2 : (i / (daily.length - 1)) * plotWidth);
+    const y = padding.top + plotHeight - rate * plotHeight;
+    return { ...d, rate, x, y };
+  });
+
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Refusal rate over time" className="daily-chart">
+      {[0, 0.5, 1].map((frac) => {
+        const y = padding.top + plotHeight - frac * plotHeight;
+        return (
+          <g key={frac}>
+            <line x1={padding.left} x2={width - padding.right} y1={y} y2={y} className="chart-gridline" />
+            <text x={padding.left - 8} y={y + 3} textAnchor="end" className="chart-axis-label">
+              {Math.round(frac * 100)}%
+            </text>
+          </g>
+        );
+      })}
+      <path d={pathD} className="rate-line" fill="none" />
+      {points.map((p, i) => (
+        <g
+          key={p.day}
+          tabIndex={0}
+          role="button"
+          aria-label={`${formatDay(p.day)}: ${Math.round(p.rate * 100)}% refusal rate`}
+          onMouseEnter={() => setHoverIndex(i)}
+          onMouseLeave={() => setHoverIndex(null)}
+          onFocus={() => setHoverIndex(i)}
+          onBlur={() => setHoverIndex(null)}
+          style={{ cursor: 'pointer', outline: 'none' }}
+        >
+          <rect x={p.x - 10} y={padding.top} width={20} height={plotHeight} fill="transparent" />
+          <circle cx={p.x} cy={p.y} r={hoverIndex === i ? 5 : 4} className="rate-dot" />
+          <text x={p.x} y={height - 8} textAnchor="middle" className="chart-axis-label">
+            {formatDay(p.day)}
+          </text>
+          {hoverIndex === i && (
+            <g transform={`translate(${p.x}, ${p.y - 8})`}>
+              <foreignObject x={-70} y={-46} width={140} height={40}>
+                <div className="chart-tooltip">
+                  <strong>{formatDay(p.day)}</strong>
+                  <span>
+                    {Math.round(p.rate * 100)}% ({p.refused}/{p.total})
+                  </span>
+                </div>
+              </foreignObject>
             </g>
-          );
-        })}
-      </svg>
-    </div>
+          )}
+        </g>
+      ))}
+    </svg>
   );
 }
 
@@ -156,11 +227,41 @@ function StatTile({ label, value, sublabel }: { label: string; value: string; su
   );
 }
 
+function SortHeader({
+  label,
+  sortKey,
+  activeSort,
+  onSort,
+}: {
+  label: string;
+  sortKey: SortKey;
+  activeSort: { key: SortKey; dir: 'asc' | 'desc' };
+  onSort: (key: SortKey) => void;
+}) {
+  const isActive = activeSort.key === sortKey;
+  return (
+    <th>
+      <button type="button" className="sort-header" onClick={() => onSort(sortKey)}>
+        {label}
+        <span className={`sort-arrow${isActive ? ' sort-arrow--active' : ''}`}>
+          {isActive && activeSort.dir === 'asc' ? '↑' : '↓'}
+        </span>
+      </button>
+    </th>
+  );
+}
+
 export default function DashboardPage() {
   const [state, setState] = useState<State>({ kind: 'loading' });
+  const [rangeDays, setRangeDays] = useState<number | null>(30);
+  const [chartView, setChartView] = useState<'volume' | 'refusalRate'>('volume');
+  const [outcomeFilter, setOutcomeFilter] = useState<'all' | 'answered' | 'refused'>('all');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({ key: 'time', dir: 'desc' });
 
   useEffect(() => {
     let cancelled = false;
+    setState((prev) => (prev.kind === 'loaded' ? prev : { kind: 'loading' }));
 
     async function load() {
       if (!DASHBOARD_STATS_URL) {
@@ -173,7 +274,8 @@ export default function DashboardPage() {
       }
 
       try {
-        const response = await fetch(DASHBOARD_STATS_URL);
+        const url = rangeDays ? `${DASHBOARD_STATS_URL}?days=${rangeDays}` : DASHBOARD_STATS_URL;
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const stats: Stats = await response.json();
         if (!cancelled) setState({ kind: 'loaded', stats });
@@ -191,12 +293,33 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [rangeDays]);
 
   const refusalRatePct = useMemo(() => {
     if (state.kind !== 'loaded') return null;
     return `${Math.round(state.stats.summary.refusalRate * 1000) / 10}%`;
   }, [state]);
+
+  const visibleRows = useMemo(() => {
+    if (state.kind !== 'loaded') return [];
+    let rows = state.stats.recent;
+    if (outcomeFilter !== 'all') rows = rows.filter((r) => r.outcome === outcomeFilter);
+    if (search.trim()) {
+      const needle = search.trim().toLowerCase();
+      rows = rows.filter((r) => r.question.toLowerCase().includes(needle));
+    }
+    const dir = sort.dir === 'asc' ? 1 : -1;
+    rows = [...rows].sort((a, b) => {
+      if (sort.key === 'time') return dir * (new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      if (sort.key === 'confidence') return dir * (a.confidence_score - b.confidence_score);
+      return dir * (a.latency_ms - b.latency_ms);
+    });
+    return rows;
+  }, [state, outcomeFilter, search, sort]);
+
+  function toggleSort(key: SortKey) {
+    setSort((prev) => (prev.key === key ? { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'desc' }));
+  }
 
   return (
     <div className="dashboard-page">
@@ -206,6 +329,19 @@ export default function DashboardPage() {
       </div>
 
       <div className="library-panel">
+        <div className="filter-row" role="group" aria-label="Time range">
+          {TIME_RANGES.map((r) => (
+            <button
+              key={r.label}
+              type="button"
+              className={`segment${rangeDays === r.days ? ' segment--active' : ''}`}
+              onClick={() => setRangeDays(r.days)}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+
         {state.kind === 'loading' && (
           <p className="library-status" role="status" aria-live="polite">
             Loading stats...
@@ -237,39 +373,121 @@ export default function DashboardPage() {
                 value={`${(state.stats.summary.p95LatencyMs / 1000).toFixed(1)}s`}
                 sublabel={`p50 ${(state.stats.summary.p50LatencyMs / 1000).toFixed(1)}s`}
               />
+              <StatTile
+                label="Borderline calls"
+                value={String(state.stats.summary.borderlineCount)}
+                sublabel="confidence 35-55%"
+              />
             </div>
 
-            <h2 className="dashboard-section-title">Daily volume</h2>
+            <div className="section-head-row">
+              <h2 className="dashboard-section-title">Daily volume</h2>
+              <div className="filter-row filter-row--compact" role="group" aria-label="Chart view">
+                <button
+                  type="button"
+                  className={`segment segment--sm${chartView === 'volume' ? ' segment--active' : ''}`}
+                  onClick={() => setChartView('volume')}
+                >
+                  Volume
+                </button>
+                <button
+                  type="button"
+                  className={`segment segment--sm${chartView === 'refusalRate' ? ' segment--active' : ''}`}
+                  onClick={() => setChartView('refusalRate')}
+                >
+                  Refusal rate
+                </button>
+              </div>
+            </div>
+
             {state.stats.daily.length === 0 ? (
               <p className="library-status">No queries logged yet.</p>
             ) : (
-              <DailyVolumeChart daily={state.stats.daily} />
+              <div className="chart-wrap">
+                {chartView === 'volume' ? (
+                  <div className="chart-legend" aria-hidden="true">
+                    <span className="legend-item">
+                      <span className="legend-swatch legend-swatch--answered" /> Answered
+                    </span>
+                    <span className="legend-item">
+                      <span className="legend-swatch legend-swatch--refused" /> Refused
+                    </span>
+                  </div>
+                ) : (
+                  <div className="chart-legend" aria-hidden="true">
+                    <span className="legend-item">
+                      <span className="legend-swatch legend-swatch--refused" /> % of queries refused
+                    </span>
+                  </div>
+                )}
+                {chartView === 'volume' ? (
+                  <DailyVolumeChart daily={state.stats.daily} />
+                ) : (
+                  <RefusalRateChart daily={state.stats.daily} />
+                )}
+              </div>
             )}
 
-            <h2 className="dashboard-section-title">Recent queries</h2>
+            <div className="section-head-row">
+              <h2 className="dashboard-section-title">Recent queries</h2>
+              <span className="table-count">
+                {visibleRows.length} of {state.stats.recent.length}
+              </span>
+            </div>
+
+            <div className="filter-row">
+              {(['all', 'answered', 'refused'] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  className={`segment segment--sm${outcomeFilter === f ? ' segment--active' : ''}`}
+                  onClick={() => setOutcomeFilter(f)}
+                >
+                  {f === 'all' ? 'All' : f[0].toUpperCase() + f.slice(1)}
+                </button>
+              ))}
+              <input
+                type="search"
+                className="filter-search"
+                placeholder="Search questions…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                aria-label="Search questions"
+              />
+            </div>
+
             {state.stats.recent.length === 0 ? (
               <p className="library-status">No queries logged yet.</p>
+            ) : visibleRows.length === 0 ? (
+              <p className="library-status">No queries match this filter.</p>
             ) : (
-              <div className="table-scroll">
+              <div className="table-scroll table-scroll--tall">
                 <table className="recent-table">
                   <thead>
                     <tr>
-                      <th>Time</th>
+                      <SortHeader label="Time" sortKey="time" activeSort={sort} onSort={toggleSort} />
                       <th>Question</th>
                       <th>Outcome</th>
-                      <th>Confidence</th>
-                      <th>Latency</th>
+                      <SortHeader label="Confidence" sortKey="confidence" activeSort={sort} onSort={toggleSort} />
+                      <SortHeader label="Latency" sortKey="latency" activeSort={sort} onSort={toggleSort} />
                     </tr>
                   </thead>
                   <tbody>
-                    {state.stats.recent.map((q, i) => (
+                    {visibleRows.map((q, i) => (
                       <tr key={i}>
                         <td className="cell-muted">{formatTimestamp(q.created_at)}</td>
                         <td className="cell-question">{q.question}</td>
                         <td>
                           <span className={`outcome-badge outcome-badge--${q.outcome}`}>{q.outcome}</span>
                         </td>
-                        <td className="cell-muted">{Math.round(q.confidence_score * 100)}%</td>
+                        <td className="cell-muted">
+                          {Math.round(q.confidence_score * 100)}%
+                          {q.confidence_score >= 0.35 && q.confidence_score <= 0.55 && (
+                            <span className="borderline-flag" title="Borderline confidence (35-55%)">
+                              !
+                            </span>
+                          )}
+                        </td>
                         <td className="cell-muted">{(q.latency_ms / 1000).toFixed(1)}s</td>
                       </tr>
                     ))}
