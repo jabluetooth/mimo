@@ -2,7 +2,7 @@
 
 Two-page frontend for Mimo, the RAG Internal Knowledge Assistant portfolio project (see `../PRD-RAG-Internal-Assistant.md`):
 
-- **/chat** — embeds n8n's `@n8n/chat` widget, wired to the query workflow's Chat Trigger.
+- **/chat** — a bespoke transcript UI (no chat-widget library) that POSTs directly to the query workflow's Chat Trigger webhook and parses its reply into a status pill + formatted answer + source chips.
 - **/upload** — drag-and-drop upload form that POSTs documents to the ingestion workflow's webhook.
 - **/library** — lists ingested documents via the "List Documents" n8n workflow.
 - **/dashboard** — query volume, refusal rate, and latency stats via the "Dashboard Stats" n8n workflow (`../n8n/dashboard-stats-workflow.json`), which reads the `query_logs` table in Neon.

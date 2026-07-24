@@ -1,8 +1,7 @@
 import { lazy, Suspense } from 'react';
-import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, NavLink, Route, Routes } from 'react-router-dom';
 
-// Code-split each route so /upload never pays for the chat widget's (Vue-based)
-// dependency tree, and /chat never pays for the landing page, and vice versa.
+// Code-split each route so no page pays for another's dependency weight.
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
 const UploadPage = lazy(() => import('./pages/UploadPage'));
@@ -10,13 +9,6 @@ const LibraryPage = lazy(() => import('./pages/LibraryPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 
 export default function App() {
-  // The chat widget wants to fill the whole viewport below the header; every
-  // other page wants its content vertically centered. Rather than smuggling
-  // that decision into every page component, decide it once here from the
-  // route and toggle a single modifier class on the shared layout shell.
-  const { pathname } = useLocation();
-  const isFullBleed = pathname === '/chat';
-
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -42,7 +34,7 @@ export default function App() {
         </nav>
       </header>
 
-      <main className={`app-main${isFullBleed ? ' app-main--full' : ''}`}>
+      <main className="app-main">
         <Suspense fallback={<div className="page-loading">Loading…</div>}>
           <Routes>
             <Route path="/" element={<LandingPage />} />

@@ -2,12 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-// Self-hosted variable fonts (no external CDN / CORS / privacy concerns).
-// Fraunces: a warm, soft-serif display face for the brand and headings.
-// Work Sans: a humanist sans for body copy that keeps things readable at
-// small sizes without reading as another generic system-font substitute.
-import '@fontsource-variable/fraunces';
-import '@fontsource-variable/work-sans';
+// Self-hosted fonts (no external CDN / CORS / privacy concerns).
+// Instrument Serif: a thin, editorial display face with a distinctive
+// italic — used sparingly for headings so the brand doesn't read as another
+// generic bold-sans AI product.
+// Plus Jakarta Sans: a warm, slightly rounded humanist sans for body copy.
+import '@fontsource/instrument-serif';
+import '@fontsource/instrument-serif/400-italic.css';
+import '@fontsource-variable/plus-jakarta-sans';
 import './styles/theme.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

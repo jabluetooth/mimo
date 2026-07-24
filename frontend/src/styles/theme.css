@@ -47,11 +47,13 @@
   --shadow-glass: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 20px 40px -16px rgba(43, 33, 29, 0.18),
     0 2px 8px rgba(43, 33, 29, 0.05);
 
-  /* Fraunces (soft serif) for the brand and headings, Work Sans (humanist
-     sans) for body copy — a deliberate serif/sans pairing instead of a
-     single generic system-font stack. */
-  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
-  --font-body: 'Work Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Instrument Serif (thin editorial display face, used at larger sizes
+     where its fine strokes stay crisp) for the brand and headings, Plus
+     Jakarta Sans (warm, slightly rounded humanist sans) for body copy —
+     deliberately not Inter/system-ui, which is what most AI-product UI
+     defaults to and is exactly the "generic" look this is meant to avoid. */
+  --font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-body: 'Plus Jakarta Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 * {
@@ -111,6 +113,11 @@ h2,
 h3,
 .app-header .brand {
   font-family: var(--font-display);
+  /* Instrument Serif ships a single 400 weight — override the browser's
+     default bold h1-h3 so headings render at the font's actual design
+     instead of a synthesized/faked bold (which looks smudgy on a fine-
+     stroke serif like this one). */
+  font-weight: 400;
 }
 
 a {
@@ -194,9 +201,12 @@ a {
 }
 
 .app-header .brand {
-  font-weight: 600;
-  font-size: 19px;
-  letter-spacing: 0.2px;
+  /* Instrument Serif ships one weight (400); its distinctive italic cut is
+     the intended way to give a wordmark presence, rather than fighting the
+     font with a synthesized/faked bold. */
+  font-style: italic;
+  font-size: 23px;
+  letter-spacing: 0.1px;
   text-decoration: none;
   border-radius: 6px;
   color: var(--text);
@@ -248,21 +258,7 @@ a {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  /* Lets a flex child with height:100% (the chat widget) actually resolve
-     against this container instead of being sized to its own content — see
-     .app-main--full below. Without this, min-height defaults to "auto" and
-     percentage heights inside a flex item are ignored. */
   min-height: 0;
-}
-
-/* The chat route wants to fill the entire area below the header edge-to-edge
-   (the @n8n/chat widget lays itself out in "fullscreen" mode assuming a
-   100%-height parent). Centering it like the other pages left it floating as
-   a small box in a sea of empty background — this is the fix for that. */
-.app-main--full {
-  align-items: stretch;
-  justify-content: stretch;
-  padding: 0;
 }
 
 .card {
@@ -818,9 +814,8 @@ code {
 
 .hero-content h1 {
   margin: 0 0 16px;
-  font-size: clamp(28px, 3.6vw, 40px);
-  font-weight: 600;
-  line-height: 1.15;
+  font-size: clamp(32px, 4.2vw, 48px);
+  line-height: 1.1;
 }
 
 .hero-lede {
@@ -889,100 +884,236 @@ code {
   letter-spacing: 0.2px;
 }
 
-/* Scope the @n8n/chat widget to fill the chat page and follow the same palette.
-   Deliberately no explicit `height` here: this div's height comes from being
-   stretched by its flex parent (.app-main--full, align-items: stretch) and
-   in turn stretches its own flex child (#n8n-chat) the same way. Percentage
-   heights on flex items are a known correctness trap — they only resolve
-   once the ancestor chain settles on a definite size, and that resolution
-   order is inconsistent enough in practice that the widget ended up rendering
-   at its own content height (a few hundred px) inside a much taller container,
-   leaving a large dead band of background below it. Stretch avoids the whole
-   percentage-resolution question. */
-.chat-page {
+/* Chat page — a bespoke transcript, deliberately not a bubble-and-avatar
+   chat-widget layout. Turns read top-to-bottom as a labeled Q&A transcript
+   (closer to an interview writeup than a messaging app), inside the same
+   glass card language as the rest of the site. */
+.chat-shell {
   width: 100%;
+  max-width: 700px;
+  height: min(680px, 78vh);
   display: flex;
+  flex-direction: column;
+  background: var(--glass-panel);
+  border: 1px solid var(--glass-border-warm);
+  border-radius: 24px;
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  overflow: hidden;
 }
 
-.chat-page #n8n-chat {
-  width: 100%;
-  --chat--font-family: var(--font-body);
+@supports not (backdrop-filter: blur(1px)) {
+  .chat-shell {
+    background: var(--panel);
+  }
+}
 
-  /* Brand accents: red-orange drives primary actions (toggle, send button,
-     user bubbles), blue is the secondary accent the widget uses for a
-     handful of its own internal highlights. */
-  --chat--color-primary: var(--accent);
-  --chat--color-primary-shade-50: var(--accent-hover);
-  --chat--color-primary-shade-100: #a22c15;
-  --chat--color-secondary: var(--accent-2);
-  --chat--color-secondary-shade-50: var(--accent-2-hover);
+.chat-transcript {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
 
-  --chat--color-white: #ffffff;
-  --chat--color-light: var(--panel-alt);
-  --chat--color-light-shade-50: var(--border);
-  --chat--color-light-shade-100: var(--border-strong);
-  --chat--color-medium: var(--border-strong);
-  --chat--color-dark: var(--text);
-  --chat--color-disabled: #b7a89d;
-  --chat--color-typing: var(--muted);
+.turn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 22px;
+  border-bottom: 1px dashed var(--glass-border-warm);
+}
 
-  --chat--window--width: 100%;
-  --chat--window--height: 100%;
-  --chat--window--border: none;
+.turn:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
 
-  /* Header bar: filled with the primary accent + white text so it reads as a
-     deliberate branded surface rather than another flat gray bar. */
-  --chat--header--background: var(--accent);
-  --chat--header--color: #ffffff;
-  --chat--heading--font-size: 1.375em;
+.turn-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
 
-  /* Message list is transparent so the page's aurora blobs show through
-     behind it, matching the rest of the app's glass treatment. Bubbles
-     themselves stay near-opaque, though — the widget can't apply
-     backdrop-filter to its own internal elements from here, and dense
-     conversation text needs to stay legible more than it needs to be
-     glassy; a plain alpha fade without blur would just look washed out. */
-  --chat--body--background: transparent;
-  --chat--message--bot--background: var(--glass-panel-strong);
-  --chat--message--bot--color: var(--text);
-  --chat--message--bot--border: 1px solid var(--glass-border-warm);
-  --chat--message--user--background: var(--accent);
-  --chat--message--user--color: #ffffff;
-  --chat--message--pre--background: rgba(43, 33, 29, 0.06);
+.turn:has(.turn-body--question) .turn-label {
+  color: var(--muted);
+}
 
-  /* Input field: white surface + visible border so it's distinguishable from
-     both the cream body behind it and the white bot bubbles above it, with an
-     accent-colored active/focus border for a clear, accessible focus state. */
-  --chat--input--background: var(--glass-panel-strong);
-  --chat--input--text-color: var(--text);
-  --chat--input--border: 1px solid var(--border-strong);
-  /* Consumed by the widget as `border-color: var(--chat--input--border-active)`
-     on :focus/:hover (not a full `border` shorthand) — must be a bare color,
-     otherwise it's an invalid value at computed-value time and silently
-     resets to currentcolor instead of the intended accent. */
-  --chat--input--border-active: var(--accent);
-  --chat--input--file--button--background: var(--panel-alt);
-  --chat--input--file--button--background-hover: var(--border);
-  --chat--input--file--button--color: var(--text);
-  --chat--input--file--button--color-hover: var(--accent);
-  --chat--input--send--button--background: var(--accent);
-  --chat--input--send--button--background-hover: var(--accent-hover);
-  --chat--input--send--button--color: #ffffff;
-  --chat--input--send--button--color-hover: #ffffff;
+.turn:has(.answer-text) .turn-label,
+.turn:has(.chat-thinking) .turn-label {
+  color: var(--accent);
+}
 
-  --chat--button--background: var(--accent);
-  --chat--button--color: #ffffff;
-  --chat--button--hover--background: var(--accent-hover);
-  --chat--button--hover--color: #ffffff;
-  --chat--close--button--color-hover: var(--accent);
+.turn-body {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text);
+}
 
-  /* Without these two the widget's required "Powered by n8n" footer renders
-     with its light-theme defaults, which happened to clash hard against the
-     old dark page. Now that the page itself is light, map it onto the same
-     panel/muted tones as the rest of the chrome instead of removing it
-     (removing the attribution isn't ours to do on the free widget). */
-  --chat--footer--background: var(--panel-alt);
-  --chat--footer--color: var(--muted);
+.turn-body--question {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.turn-body--error {
+  color: var(--error);
+}
+
+.answer-text p {
+  margin: 0 0 10px;
+}
+
+.answer-text p:last-child {
+  margin-bottom: 0;
+}
+
+.answer-text ul {
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+
+.citation-marker {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.75em;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.status-pill--grounded {
+  background: rgba(30, 122, 52, 0.14);
+  color: var(--success);
+}
+
+.status-pill--refused {
+  background: rgba(0, 113, 184, 0.12);
+  color: var(--accent-2);
+}
+
+.sources-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.source-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--glass-border-warm);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.source-chip-meta {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.chat-thinking {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.chat-thinking::after {
+  content: '';
+  animation: thinking-ellipsis 1.4s steps(4, end) infinite;
+}
+
+@keyframes thinking-ellipsis {
+  0% {
+    content: '';
+  }
+  25% {
+    content: '.';
+  }
+  50% {
+    content: '..';
+  }
+  75% {
+    content: '...';
+  }
+}
+
+.chat-input-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px;
+  padding: 6px 6px 6px 18px;
+  background: var(--glass-panel-strong);
+  border: 1px solid var(--glass-border-warm);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+}
+
+.chat-input-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  min-width: 0;
+}
+
+.chat-input-bar input::placeholder {
+  color: var(--muted);
+}
+
+.chat-send-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+}
+
+.chat-send-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.chat-send-btn:focus-visible,
+.chat-input-bar input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Tablet and narrower: stack the hero into a single column (text above,
