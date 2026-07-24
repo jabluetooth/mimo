@@ -606,7 +606,32 @@ code {
 
 .dashboard-section-title {
   font-size: 16px;
-  margin: 28px 0 12px;
+  margin: 0 0 12px;
+}
+
+/* Each major module (controls / stat tiles / chart / table) gets consistent
+   top spacing and a hairline divider, rather than each one carrying its own
+   ad hoc margin — that inconsistency (28px here, 20px there) was part of
+   what read as "uneven" beyond just the chart itself. */
+.dashboard-block {
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid var(--glass-border-warm);
+}
+
+.dashboard-block:first-child {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
+}
+
+.filter-row-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-right: 2px;
 }
 
 .stat-grid {
@@ -623,10 +648,12 @@ code {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 16px;
 }
 
 .filter-row--compact {
   gap: 4px;
+  margin-bottom: 0;
 }
 
 .segment {
@@ -688,7 +715,7 @@ code {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 28px;
+  margin-bottom: 16px;
 }
 
 .section-head-row .dashboard-section-title {
@@ -786,6 +813,11 @@ code {
 
 .chart-gridline {
   stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart-baseline {
+  stroke: var(--border-strong);
   stroke-width: 1;
 }
 

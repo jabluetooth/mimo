@@ -69,8 +69,14 @@ function DailyVolumeChart({ daily }: { daily: DailyPoint[] }) {
   const plotHeight = height - padding.top - padding.bottom;
 
   const maxTotal = Math.max(...daily.map((d) => d.total), 1);
-  const barGap = 8;
-  const barWidth = daily.length > 0 ? Math.min(48, plotWidth / daily.length - barGap) : 0;
+  // Each day gets an equal-width slot spanning the full chart width (so axis
+  // labels stay evenly spaced regardless of how many days there are), but the
+  // bar itself is centered within its slot and width-capped — otherwise a
+  // sparse range (1-2 days) stretches each slot so wide the bar ends up
+  // stranded near one edge with a large dead gap after it, which is what
+  // "uneven spacing" was pointing at.
+  const slotWidth = daily.length > 0 ? plotWidth / daily.length : 0;
+  const barWidth = Math.max(6, Math.min(56, slotWidth * 0.55));
 
   return (
     <svg
@@ -79,9 +85,16 @@ function DailyVolumeChart({ daily }: { daily: DailyPoint[] }) {
       aria-label="Daily query volume, split into answered and refused"
       className="daily-chart"
     >
+      <line
+        x1={padding.left}
+        x2={width - padding.right}
+        y1={padding.top + plotHeight}
+        y2={padding.top + plotHeight}
+        className="chart-baseline"
+      />
       {daily.map((d, i) => {
         const answered = d.total - d.refused;
-        const x = padding.left + i * (plotWidth / daily.length) + barGap / 2;
+        const x = padding.left + i * slotWidth + (slotWidth - barWidth) / 2;
         const answeredHeight = (answered / maxTotal) * plotHeight;
         const refusedHeight = (d.refused / maxTotal) * plotHeight;
         const gap = answered > 0 && d.refused > 0 ? 2 : 0;
@@ -102,7 +115,13 @@ function DailyVolumeChart({ daily }: { daily: DailyPoint[] }) {
             onBlur={() => setHoverIndex(null)}
             style={{ cursor: 'pointer', outline: 'none' }}
           >
-            <rect x={x - 4} y={padding.top} width={barWidth + 8} height={plotHeight} fill="transparent" />
+            <rect
+              x={padding.left + i * slotWidth}
+              y={padding.top}
+              width={slotWidth}
+              height={plotHeight}
+              fill="transparent"
+            />
             {answered > 0 && (
               <rect
                 x={x}
@@ -329,17 +348,20 @@ export default function DashboardPage() {
       </div>
 
       <div className="library-panel">
-        <div className="filter-row" role="group" aria-label="Time range">
-          {TIME_RANGES.map((r) => (
-            <button
-              key={r.label}
-              type="button"
-              className={`segment${rangeDays === r.days ? ' segment--active' : ''}`}
-              onClick={() => setRangeDays(r.days)}
-            >
-              {r.label}
-            </button>
-          ))}
+        <div className="dashboard-block dashboard-block--controls">
+          <div className="filter-row" role="group" aria-label="Time range">
+            <span className="filter-row-label">Time range</span>
+            {TIME_RANGES.map((r) => (
+              <button
+                key={r.label}
+                type="button"
+                className={`segment${rangeDays === r.days ? ' segment--active' : ''}`}
+                onClick={() => setRangeDays(r.days)}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {state.kind === 'loading' && (
@@ -360,108 +382,113 @@ export default function DashboardPage() {
 
         {state.kind === 'loaded' && (
           <>
-            <div className="stat-grid">
-              <StatTile label="Total queries" value={String(state.stats.summary.total)} />
-              <StatTile
-                label="Refusal rate"
-                value={refusalRatePct ?? '—'}
-                sublabel={`${state.stats.summary.refused} of ${state.stats.summary.total}`}
-              />
-              <StatTile label="Avg latency" value={`${(state.stats.summary.avgLatencyMs / 1000).toFixed(1)}s`} />
-              <StatTile
-                label="p95 latency"
-                value={`${(state.stats.summary.p95LatencyMs / 1000).toFixed(1)}s`}
-                sublabel={`p50 ${(state.stats.summary.p50LatencyMs / 1000).toFixed(1)}s`}
-              />
-              <StatTile
-                label="Borderline calls"
-                value={String(state.stats.summary.borderlineCount)}
-                sublabel="confidence 35-55%"
-              />
-            </div>
-
-            <div className="section-head-row">
-              <h2 className="dashboard-section-title">Daily volume</h2>
-              <div className="filter-row filter-row--compact" role="group" aria-label="Chart view">
-                <button
-                  type="button"
-                  className={`segment segment--sm${chartView === 'volume' ? ' segment--active' : ''}`}
-                  onClick={() => setChartView('volume')}
-                >
-                  Volume
-                </button>
-                <button
-                  type="button"
-                  className={`segment segment--sm${chartView === 'refusalRate' ? ' segment--active' : ''}`}
-                  onClick={() => setChartView('refusalRate')}
-                >
-                  Refusal rate
-                </button>
+            <div className="dashboard-block">
+              <div className="stat-grid">
+                <StatTile label="Total queries" value={String(state.stats.summary.total)} />
+                <StatTile
+                  label="Refusal rate"
+                  value={refusalRatePct ?? '—'}
+                  sublabel={`${state.stats.summary.refused} of ${state.stats.summary.total}`}
+                />
+                <StatTile label="Avg latency" value={`${(state.stats.summary.avgLatencyMs / 1000).toFixed(1)}s`} />
+                <StatTile
+                  label="p95 latency"
+                  value={`${(state.stats.summary.p95LatencyMs / 1000).toFixed(1)}s`}
+                  sublabel={`p50 ${(state.stats.summary.p50LatencyMs / 1000).toFixed(1)}s`}
+                />
+                <StatTile
+                  label="Borderline calls"
+                  value={String(state.stats.summary.borderlineCount)}
+                  sublabel="confidence 35-55%"
+                />
               </div>
             </div>
 
-            {state.stats.daily.length === 0 ? (
-              <p className="library-status">No queries logged yet.</p>
-            ) : (
-              <div className="chart-wrap">
-                {chartView === 'volume' ? (
-                  <div className="chart-legend" aria-hidden="true">
-                    <span className="legend-item">
-                      <span className="legend-swatch legend-swatch--answered" /> Answered
-                    </span>
-                    <span className="legend-item">
-                      <span className="legend-swatch legend-swatch--refused" /> Refused
-                    </span>
-                  </div>
-                ) : (
-                  <div className="chart-legend" aria-hidden="true">
-                    <span className="legend-item">
-                      <span className="legend-swatch legend-swatch--refused" /> % of queries refused
-                    </span>
-                  </div>
-                )}
-                {chartView === 'volume' ? (
-                  <DailyVolumeChart daily={state.stats.daily} />
-                ) : (
-                  <RefusalRateChart daily={state.stats.daily} />
-                )}
+            <div className="dashboard-block">
+              <div className="section-head-row">
+                <h2 className="dashboard-section-title">Daily volume</h2>
+                <div className="filter-row filter-row--compact" role="group" aria-label="Chart view">
+                  <button
+                    type="button"
+                    className={`segment segment--sm${chartView === 'volume' ? ' segment--active' : ''}`}
+                    onClick={() => setChartView('volume')}
+                  >
+                    Volume
+                  </button>
+                  <button
+                    type="button"
+                    className={`segment segment--sm${chartView === 'refusalRate' ? ' segment--active' : ''}`}
+                    onClick={() => setChartView('refusalRate')}
+                  >
+                    Refusal rate
+                  </button>
+                </div>
               </div>
-            )}
 
-            <div className="section-head-row">
-              <h2 className="dashboard-section-title">Recent queries</h2>
-              <span className="table-count">
-                {visibleRows.length} of {state.stats.recent.length}
-              </span>
+              {state.stats.daily.length === 0 ? (
+                <p className="library-status">No queries logged yet.</p>
+              ) : (
+                <div className="chart-wrap">
+                  {chartView === 'volume' ? (
+                    <div className="chart-legend" aria-hidden="true">
+                      <span className="legend-item">
+                        <span className="legend-swatch legend-swatch--answered" /> Answered
+                      </span>
+                      <span className="legend-item">
+                        <span className="legend-swatch legend-swatch--refused" /> Refused
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="chart-legend" aria-hidden="true">
+                      <span className="legend-item">
+                        <span className="legend-swatch legend-swatch--refused" /> % of queries refused
+                      </span>
+                    </div>
+                  )}
+                  {chartView === 'volume' ? (
+                    <DailyVolumeChart daily={state.stats.daily} />
+                  ) : (
+                    <RefusalRateChart daily={state.stats.daily} />
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="filter-row">
-              {(['all', 'answered', 'refused'] as const).map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  className={`segment segment--sm${outcomeFilter === f ? ' segment--active' : ''}`}
-                  onClick={() => setOutcomeFilter(f)}
-                >
-                  {f === 'all' ? 'All' : f[0].toUpperCase() + f.slice(1)}
-                </button>
-              ))}
-              <input
-                type="search"
-                className="filter-search"
-                placeholder="Search questions…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                aria-label="Search questions"
-              />
-            </div>
+            <div className="dashboard-block">
+              <div className="section-head-row">
+                <h2 className="dashboard-section-title">Recent queries</h2>
+                <span className="table-count">
+                  {visibleRows.length} of {state.stats.recent.length}
+                </span>
+              </div>
 
-            {state.stats.recent.length === 0 ? (
-              <p className="library-status">No queries logged yet.</p>
-            ) : visibleRows.length === 0 ? (
-              <p className="library-status">No queries match this filter.</p>
-            ) : (
-              <div className="table-scroll table-scroll--tall">
+              <div className="filter-row">
+                {(['all', 'answered', 'refused'] as const).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    className={`segment segment--sm${outcomeFilter === f ? ' segment--active' : ''}`}
+                    onClick={() => setOutcomeFilter(f)}
+                  >
+                    {f === 'all' ? 'All' : f[0].toUpperCase() + f.slice(1)}
+                  </button>
+                ))}
+                <input
+                  type="search"
+                  className="filter-search"
+                  placeholder="Search questions…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  aria-label="Search questions"
+                />
+              </div>
+
+              {state.stats.recent.length === 0 ? (
+                <p className="library-status">No queries logged yet.</p>
+              ) : visibleRows.length === 0 ? (
+                <p className="library-status">No queries match this filter.</p>
+              ) : (
+                <div className="table-scroll table-scroll--tall">
                 <table className="recent-table">
                   <thead>
                     <tr>
@@ -495,6 +522,7 @@ export default function DashboardPage() {
                 </table>
               </div>
             )}
+            </div>
 
             <p className="hint">
               Cost-per-query and error/retry rate aren't shown — token cost isn't currently logged by the
