@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '../auth/AuthContext';
 
 const DASHBOARD_STATS_URL = import.meta.env.VITE_DASHBOARD_STATS_URL;
 
@@ -271,6 +272,7 @@ function SortHeader({
 }
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [rangeDays, setRangeDays] = useState<number | null>(30);
   const [chartView, setChartView] = useState<'volume' | 'refusalRate'>('volume');
@@ -294,7 +296,9 @@ export default function DashboardPage() {
 
       try {
         const url = rangeDays ? `${DASHBOARD_STATS_URL}?days=${rangeDays}` : DASHBOARD_STATS_URL;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          headers: user ? { Authorization: `Bearer ${user.token}` } : {},
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const stats: Stats = await response.json();
         if (!cancelled) setState({ kind: 'loaded', stats });
@@ -312,7 +316,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [rangeDays]);
+  }, [rangeDays, user]);
 
   const refusalRatePct = useMemo(() => {
     if (state.kind !== 'loaded') return null;

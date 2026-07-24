@@ -252,6 +252,25 @@ a {
   background: var(--panel-alt);
 }
 
+.nav-account {
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-account:hover {
+  color: var(--accent);
+  background: var(--panel-alt);
+}
+
 .app-main {
   flex: 1;
   display: flex;
@@ -290,6 +309,35 @@ a {
   margin: 0 0 24px;
 }
 
+.form-field {
+  margin-bottom: 16px;
+}
+
+.form-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.form-field input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.form-field input:focus-visible {
+  border-color: var(--accent);
+}
+
 .dropzone {
   display: block;
   border: 2px dashed var(--border-strong);
@@ -319,6 +367,32 @@ a {
   font-weight: 600;
   margin-top: 8px;
   word-break: break-all;
+}
+
+.visibility-picker {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.visibility-picker legend {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.visibility-picker label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
 }
 
 .primary-button {

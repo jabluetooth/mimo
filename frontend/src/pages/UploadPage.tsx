@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, DragEvent, ChangeEvent } from 'react';
+import { useAuth } from '../auth/AuthContext';
 
 const UPLOAD_WEBHOOK_URL = import.meta.env.VITE_UPLOAD_WEBHOOK_URL;
 const BINARY_FIELD_NAME = 'data'; // must match the ingestion webhook node's binaryPropertyName
@@ -33,11 +34,13 @@ type Status = { kind: 'idle' | 'uploading' | 'success' | 'error'; message: strin
 type StepState = 'pending' | 'active' | 'done' | 'error';
 
 export default function UploadPage() {
+  const { user } = useAuth();
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const stepTimerRef = useRef<number | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [visibility, setVisibility] = useState<'member' | 'admin'>('member');
   const [status, setStatus] = useState<Status>({ kind: 'idle', message: '' });
   const [stepIndex, setStepIndex] = useState(0);
 
@@ -110,9 +113,11 @@ export default function UploadPage() {
     try {
       const formData = new FormData();
       formData.append(BINARY_FIELD_NAME, file, file.name);
+      formData.append('visibility', visibility);
 
       const response = await fetch(UPLOAD_WEBHOOK_URL, {
         method: 'POST',
+        headers: user ? { Authorization: `Bearer ${user.token}` } : {},
         body: formData,
       });
 
@@ -201,6 +206,30 @@ export default function UploadPage() {
         <p>{file ? 'Selected:' : 'Click to choose a file, or drag one here'}</p>
         <div className="filename">{file?.name ?? ''}</div>
       </label>
+
+      <fieldset className="visibility-picker" disabled={isUploading}>
+        <legend>Who can see this document?</legend>
+        <label>
+          <input
+            type="radio"
+            name="visibility"
+            value="member"
+            checked={visibility === 'member'}
+            onChange={() => setVisibility('member')}
+          />
+          Everyone (members and admins)
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="visibility"
+            value="admin"
+            checked={visibility === 'admin'}
+            onChange={() => setVisibility('admin')}
+          />
+          Admins only
+        </label>
+      </fieldset>
 
       <button className="primary-button" disabled={!file || isUploading} onClick={upload}>
         {isUploading ? 'Uploading...' : 'Upload'}

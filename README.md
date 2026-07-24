@@ -38,9 +38,10 @@ Everything above is a single active n8n workflow ("Mimo RAG - Combined Workflow"
 | Embeddings | Hugging Face Inference API (`BAAI/bge-small-en-v1.5`) |
 | Vector DB | Qdrant (self-hosted, Docker) |
 | Reranker | HuggingFace rerank endpoint via HTTP Request node |
-| Frontend | Vite/React, 5 pages: landing, chat (`@n8n/chat` widget), upload, library, dashboard — deployed on Vercel |
+| Frontend | Vite/React, 7 pages: landing, chat (bespoke UI, no widget), upload, library, dashboard, login, signup — deployed on Vercel |
 | Logging | Postgres/Neon (`Log Answered Query` / `Log Refused Query` → `query_logs` table) |
 | Knowledge-gap alerting | Slack node fired on refusal |
+| Auth / RBAC | Custom email+password (salted HMAC-SHA256 + server pepper, no third-party auth service) issuing HS256 JWTs via a dedicated n8n workflow; roles are `admin`/`member`, stored in a Neon `users` table |
 
 The generation system prompt enforces grounded-only answers, per-claim `[n]` citations, explicit ambiguity surfacing, and treats retrieved content as untrusted data (prompt-injection defense) — see FR-9–FR-12 in the PRD.
 
@@ -59,12 +60,15 @@ The generation system prompt enforces grounded-only answers, per-claim `[n]` cit
 
 Hybrid (vector + keyword) retrieval from FR-6 is also not implemented — retrieval is vector-only, with reranking as the quality safeguard.
 
+**Role-based access control** (listed in the PRD's §11 "Out of Scope (v1) / Future Work") is now implemented ahead of that schedule: chat and the library require login, upload and the dashboard require the `admin` role, and retrieval itself filters out `admin`-only documents from a `member`'s results server-side — not just hidden in the UI. See [RBAC-SETUP.md](RBAC-SETUP.md) for the n8n-side setup steps and known limitations (the password hashing scheme in particular is deliberately scoped for this project's size, not bank-grade).
+
 ## Repo layout
 
 - `frontend/` — the Vite/React app (landing, chat, upload, library, dashboard pages). See [frontend/README.md](frontend/README.md) for local setup and env vars.
 - `seed/` — standalone Node scripts (`ingest.js`, `query.js`) that chunk sample markdown docs, embed them via the HF API, and upsert/query a local Qdrant instance, plus the [seed/eval/](seed/eval/) eval harness used for [SCORECARD.md](SCORECARD.md). Useful for testing retrieval/eval in isolation, without touching the production n8n workflow or its Qdrant collection.
-- `n8n/` — exported n8n workflow JSON, importable via n8n's "Import from File" (currently just the dashboard-stats workflow; the main combined workflow isn't exported here yet — tracked under Milestone 7).
+- `n8n/` — exported n8n workflow JSON, importable via n8n's "Import from File": `dashboard-stats-workflow.json`, `auth-workflow.json` (sign up / login), and `combined-workflow-rbac.json` (the main query/ingestion workflow with RBAC gates added — see [RBAC-SETUP.md](RBAC-SETUP.md) for how to apply it).
 - `PRD-RAG-Internal-Assistant.md` — full requirements doc.
+- `RBAC-SETUP.md` — manual n8n-side setup steps for the auth/RBAC system (credentials, workflow import, first-admin promotion).
 
 ## Local setup
 

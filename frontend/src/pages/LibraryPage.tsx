@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 
 const LIST_DOCUMENTS_URL = import.meta.env.VITE_LIST_DOCUMENTS_URL;
 
@@ -29,6 +30,7 @@ function formatUpdatedAt(value: string | null): string {
 }
 
 export default function LibraryPage() {
+  const { user } = useAuth();
   const [state, setState] = useState<State>({ kind: 'loading' });
 
   useEffect(() => {
@@ -45,7 +47,9 @@ export default function LibraryPage() {
       }
 
       try {
-        const response = await fetch(LIST_DOCUMENTS_URL);
+        const response = await fetch(LIST_DOCUMENTS_URL, {
+          headers: user ? { Authorization: `Bearer ${user.token}` } : {},
+        });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
@@ -73,7 +77,7 @@ export default function LibraryPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user]);
 
   return (
     <div className="library-page">
@@ -105,9 +109,11 @@ export default function LibraryPage() {
         {state.kind === 'loaded' && state.documents.length === 0 && (
           <div className="library-empty" role="status" aria-live="polite">
             <p>No documents have been ingested yet.</p>
-            <Link to="/upload" className="primary-button cta-button">
-              Upload the first document
-            </Link>
+            {user?.role === 'admin' && (
+              <Link to="/upload" className="primary-button cta-button">
+                Upload the first document
+              </Link>
+            )}
           </div>
         )}
 

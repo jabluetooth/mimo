@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 
 const CHAT_WEBHOOK_URL = import.meta.env.VITE_CHAT_WEBHOOK_URL;
 const LIST_DOCUMENTS_URL = import.meta.env.VITE_LIST_DOCUMENTS_URL;
@@ -153,6 +154,7 @@ function AnswerTurn({ parsed }: { parsed: ParsedAnswer }) {
 }
 
 export default function ChatPage() {
+  const { user } = useAuth();
   const [turns, setTurns] = useState<Turn[]>([{ role: 'assistant', kind: 'welcome', text: WELCOME }]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
@@ -164,12 +166,14 @@ export default function ChatPage() {
     let cancelled = false;
 
     async function checkLibrary() {
-      if (!LIST_DOCUMENTS_URL) {
+      if (!LIST_DOCUMENTS_URL || !user) {
         if (!cancelled) setLibrary({ kind: 'unknown' });
         return;
       }
       try {
-        const response = await fetch(LIST_DOCUMENTS_URL);
+        const response = await fetch(LIST_DOCUMENTS_URL, {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload: { documents: LibraryDoc[] } = await response.json();
         const documents = payload.documents ?? [];
@@ -183,7 +187,7 @@ export default function ChatPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user]);
 
   const suggestions = library.kind === 'ready' ? suggestionsFromDocuments(library.documents) : [];
 
@@ -216,7 +220,11 @@ export default function ChatPage() {
       const response = await fetch(CHAT_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatInput: question, sessionId }),
+        // The Chat Trigger node doesn't reliably expose custom headers, but
+        // it does pass the full request body through -- so the token rides
+        // alongside chatInput/sessionId here instead of an Authorization
+        // header (which is what Upload/Library/Dashboard use instead).
+        body: JSON.stringify({ chatInput: question, sessionId, token: user?.token }),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
@@ -245,12 +253,15 @@ export default function ChatPage() {
           <p className="chat-empty-eyebrow">Nothing to chat about yet</p>
           <h2>Your knowledge base is empty</h2>
           <p className="chat-empty-body">
-            Mimo answers questions from documents you've uploaded — there aren't any yet, so there's nothing to
-            ground an answer in. Upload a document first, then come back here to ask about it.
+            Mimo answers questions from documents that have been uploaded — there aren't any yet, so there's
+            nothing to ground an answer in.
+            {user?.role === 'admin' ? ' Upload one first, then come back here to ask about it.' : ' Ask an admin to upload one.'}
           </p>
-          <Link to="/upload" className="primary-button cta-button">
-            Upload a document
-          </Link>
+          {user?.role === 'admin' && (
+            <Link to="/upload" className="primary-button cta-button">
+              Upload a document
+            </Link>
+          )}
         </div>
       </div>
     );

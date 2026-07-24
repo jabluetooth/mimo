@@ -1,0 +1,673 @@
+{
+  "name": "Mimo Auth (Sign Up / Login)",
+  "nodes": [
+    {
+      "id": "897a09cc-0492-4be9-bee8-923813361ef1",
+      "name": "Signup Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1600,
+        -200
+      ],
+      "webhookId": "2bc9aab8-3676-4f0a-894d-6445be79b6a6",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "auth-signup",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "68ce013e-522a-4044-b0f2-00dfdeeb2258",
+      "name": "Check Email Exists (Signup)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1400,
+        -200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT count(*)::int AS cnt FROM users WHERE email = $1;",
+        "options": {
+          "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email] }}"
+        }
+      }
+    },
+    {
+      "id": "058bf665-b5e5-4f1f-ad42-5e8b9322ef9c",
+      "name": "Email Taken?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1200,
+        -200
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.cnt }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a052824a-e934-4827-aa8f-432ed32e6c73",
+      "name": "Respond Email Taken",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -1000,
+        -300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 409,
+        "responseBody": "={{ { \"error\": \"Email already registered\" } }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "1dfeb349-9ca0-4bb7-a00f-457d6d5b4226",
+      "name": "Generate Salt (Signup)",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        -100
+      ],
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "salt",
+        "encodingType": "hex",
+        "stringLength": 32
+      }
+    },
+    {
+      "id": "3854d058-1bc7-43a5-87e4-eda02c346544",
+      "name": "Hash Password (Signup)",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        -100
+      ],
+      "credentials": {
+        "crypto": {
+          "id": "PLACEHOLDER_PEPPER_CRED_ID",
+          "name": "RAG Password Pepper"
+        }
+      },
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{ $json.salt + ':' + $('Signup Webhook').item.json.body.password }}",
+        "dataPropertyName": "passwordHash",
+        "encoding": "hex"
+      }
+    },
+    {
+      "id": "a25fec7b-b271-4f69-b2c6-db4f6d27b24b",
+      "name": "Insert User",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -600,
+        -100
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO users (email, password_hash, password_salt) VALUES ($1, $2, $3) RETURNING id, email, role;",
+        "options": {
+          "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email, $json.passwordHash, $('Generate Salt (Signup)').item.json.salt] }}"
+        }
+      }
+    },
+    {
+      "id": "651ed713-8047-4625-a466-3b1a7edc5eb9",
+      "name": "Sign JWT (Signup)",
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -100
+      ],
+      "credentials": {
+        "jwtAuth": {
+          "id": "PLACEHOLDER_JWT_CRED_ID",
+          "name": "RAG JWT"
+        }
+      },
+      "parameters": {
+        "operation": "sign",
+        "useJson": true,
+        "claimsJson": "={{ { \"sub\": $json.id, \"email\": $json.email, \"role\": $json.role, \"exp\": Math.floor(Date.now()/1000) + 604800 } }}",
+        "options": {
+          "algorithm": "HS256"
+        }
+      }
+    },
+    {
+      "id": "861ee60d-56e7-47b5-93d0-aa87dbf05910",
+      "name": "Shape Signup Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -200,
+        -100
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3235c73f-a54c-4471-9019-3e08a7825900",
+              "name": "token",
+              "type": "string",
+              "value": "={{ $json.token }}"
+            },
+            {
+              "id": "ef8b4884-55eb-49b2-bf24-74460fb60f0e",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $('Insert User').item.json.email }}"
+            },
+            {
+              "id": "862561c2-a95f-4d3d-8775-e2b282f88482",
+              "name": "role",
+              "type": "string",
+              "value": "={{ $('Insert User').item.json.role }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "17a17131-b84e-4458-9d72-c1edfe481f25",
+      "name": "Respond Signup Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        -100
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "cb779755-9be4-4605-a9c2-9567be29cfcd",
+      "name": "Login Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1600,
+        200
+      ],
+      "webhookId": "85d54581-628d-41f9-aac8-f3e6a2610ad0",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "auth-login",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "b88fbe61-5e4d-4188-9d2d-8eaff8dcd29a",
+      "name": "Check User Exists (Login)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1400,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT count(*)::int AS cnt FROM users WHERE email = $1;",
+        "options": {
+          "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
+        }
+      }
+    },
+    {
+      "id": "02af5a10-7bbf-4f9d-bbde-11e6866841ce",
+      "name": "User Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1200,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.cnt }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cbb8935e-e83a-484f-b86c-14aaa5cc3ff7",
+      "name": "Respond Invalid Login",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -1000,
+        350
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 401,
+        "responseBody": "={{ { \"error\": \"Invalid email or password\" } }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "01a7f2f3-4620-46e0-9c35-93e8d159397b",
+      "name": "Fetch User (Login)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1000,
+        150
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, email, password_hash, password_salt, role FROM users WHERE email = $1 LIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
+        }
+      }
+    },
+    {
+      "id": "38637a70-8b25-4c29-94d7-8bfe480ddd4f",
+      "name": "Hash Submitted Password (Login)",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        150
+      ],
+      "credentials": {
+        "crypto": {
+          "id": "PLACEHOLDER_PEPPER_CRED_ID",
+          "name": "RAG Password Pepper"
+        }
+      },
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{ $json.password_salt + ':' + $('Login Webhook').item.json.body.password }}",
+        "dataPropertyName": "passwordHash",
+        "encoding": "hex"
+      }
+    },
+    {
+      "id": "8222904b-f1b7-4be5-a47f-ef87aff5d08c",
+      "name": "Password Correct?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -600,
+        150
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.passwordHash }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "={{ $('Fetch User (Login)').item.json.password_hash }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0adddbae-d2b5-4e69-b548-77c9dd465534",
+      "name": "Sign JWT (Login)",
+      "type": "n8n-nodes-base.jwt",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        150
+      ],
+      "credentials": {
+        "jwtAuth": {
+          "id": "PLACEHOLDER_JWT_CRED_ID",
+          "name": "RAG JWT"
+        }
+      },
+      "parameters": {
+        "operation": "sign",
+        "useJson": true,
+        "claimsJson": "={{ { \"sub\": $('Fetch User (Login)').item.json.id, \"email\": $('Fetch User (Login)').item.json.email, \"role\": $('Fetch User (Login)').item.json.role, \"exp\": Math.floor(Date.now()/1000) + 604800 } }}",
+        "options": {
+          "algorithm": "HS256"
+        }
+      }
+    },
+    {
+      "id": "1d8e8e1e-cb09-4349-8f1a-4da1929d323b",
+      "name": "Shape Login Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -200,
+        150
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9d6cf7d4-92b5-473f-9685-39802ea5e561",
+              "name": "token",
+              "type": "string",
+              "value": "={{ $json.token }}"
+            },
+            {
+              "id": "e85d0d86-e29a-4f82-899b-ae2411525c2c",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $('Fetch User (Login)').item.json.email }}"
+            },
+            {
+              "id": "8ed39b14-eee3-4bb5-8e8d-6d06df67f98b",
+              "name": "role",
+              "type": "string",
+              "value": "={{ $('Fetch User (Login)').item.json.role }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "813aaa08-cf05-46f5-a778-2c846abc44da",
+      "name": "Respond Login Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        150
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Signup Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check Email Exists (Signup)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Email Exists (Signup)": {
+      "main": [
+        [
+          {
+            "node": "Email Taken?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Taken?": {
+      "main": [
+        [
+          {
+            "node": "Respond Email Taken",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Salt (Signup)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Salt (Signup)": {
+      "main": [
+        [
+          {
+            "node": "Hash Password (Signup)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash Password (Signup)": {
+      "main": [
+        [
+          {
+            "node": "Insert User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert User": {
+      "main": [
+        [
+          {
+            "node": "Sign JWT (Signup)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign JWT (Signup)": {
+      "main": [
+        [
+          {
+            "node": "Shape Signup Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape Signup Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Signup Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Login Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check User Exists (Login)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check User Exists (Login)": {
+      "main": [
+        [
+          {
+            "node": "User Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Exists?": {
+      "main": [
+        [
+          {
+            "node": "Respond Invalid Login",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch User (Login)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch User (Login)": {
+      "main": [
+        [
+          {
+            "node": "Hash Submitted Password (Login)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash Submitted Password (Login)": {
+      "main": [
+        [
+          {
+            "node": "Password Correct?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Password Correct?": {
+      "main": [
+        [
+          {
+            "node": "Sign JWT (Login)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Invalid Login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign JWT (Login)": {
+      "main": [
+        [
+          {
+            "node": "Shape Login Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape Login Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Login Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
