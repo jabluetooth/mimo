@@ -1270,6 +1270,9 @@ code {
   font-size: 14px;
   color: var(--text);
   min-width: 0;
+  /* The text caret itself — an orange vertical line — is the focus
+     indicator here, not a ring/outline around the whole pill. */
+  caret-color: var(--accent-raw);
 }
 
 .chat-input-bar input::placeholder {
@@ -1300,10 +1303,13 @@ code {
   cursor: not-allowed;
 }
 
-.chat-send-btn:focus-visible,
-.chat-input-bar input:focus-visible {
+.chat-send-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.chat-input-bar input:focus-visible {
+  outline: none;
 }
 
 /* Tablet and narrower: stack the hero into a single column (text above,
