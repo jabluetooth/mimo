@@ -33,6 +33,20 @@
   --shadow-sm: 0 1px 2px rgba(43, 33, 29, 0.05);
   --shadow-md: 0 16px 32px -12px rgba(43, 33, 29, 0.16), 0 2px 6px rgba(43, 33, 29, 0.06);
 
+  /* Glassmorphism surfaces — a light-mode take on the frosted-glass system:
+     translucent white panels over softly blurred brand-color blobs, rather
+     than the dark/indigo original. Panel opacity is kept high (0.72+) so
+     text sitting on it still clears the same WCAG contrast as the old solid
+     --panel did — glass here means "frosted", not "sheer". */
+  --glass-panel: rgba(255, 255, 255, 0.72);
+  --glass-panel-strong: rgba(255, 255, 255, 0.86);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-border-warm: rgba(234, 217, 204, 0.7);
+  --glass-blur: blur(20px) saturate(1.5);
+  --glass-blur-sm: blur(12px) saturate(1.3);
+  --shadow-glass: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 20px 40px -16px rgba(43, 33, 29, 0.18),
+    0 2px 8px rgba(43, 33, 29, 0.05);
+
   /* Fraunces (soft serif) for the brand and headings, Work Sans (humanist
      sans) for body copy — a deliberate serif/sans pairing instead of a
      single generic system-font stack. */
@@ -55,6 +69,41 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
+  position: relative;
+}
+
+/* Aurora background — soft blurred washes of the two brand accents plus a
+   muted neutral, drifting slowly. This is what makes the frosted panels
+   below actually read as "glass": without color moving behind them, a
+   translucent panel just looks like a faint card. Kept low-opacity/heavily
+   blurred so it stays a wash of color, not a distraction from content. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(closest-side at 15% 20%, rgba(231, 63, 30, 0.16), transparent 70%),
+    radial-gradient(closest-side at 85% 15%, rgba(0, 125, 204, 0.14), transparent 72%),
+    radial-gradient(closest-side at 50% 100%, rgba(231, 63, 30, 0.1), transparent 70%);
+  background-size: 1200px 900px, 1000px 900px, 1400px 900px;
+  background-repeat: no-repeat;
+  filter: blur(50px);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 0;
+  animation: aurora-drift 26s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, 1%, 0) scale(1.05);
+  }
+  100% {
+    transform: translate3d(-1%, 2%, 0) scale(1);
+  }
 }
 
 h1,
@@ -113,16 +162,35 @@ a {
   display: flex;
   flex-direction: column;
   min-height: 100%;
+  position: relative;
+  z-index: 1;
 }
 
+/* Floating frosted-glass topbar, sticky at the top of the viewport — the
+   glassmorphism reference's ".topbar" treatment, recolored for the warm
+   light theme: translucent white over the aurora blobs instead of dark. */
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  margin: 12px 16px;
+  border: 1px solid var(--glass-border-warm);
+  border-radius: 18px;
   flex-shrink: 0;
-  background: var(--bg);
+  background: var(--glass-panel);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-glass);
+  position: sticky;
+  top: 12px;
+  z-index: 20;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .app-header {
+    background: var(--panel);
+  }
 }
 
 .app-header .brand {
@@ -146,10 +214,12 @@ a {
 .app-nav {
   display: flex;
   gap: 4px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: var(--glass-panel-strong);
+  border: 1px solid var(--glass-border-warm);
+  border-radius: 12px;
   padding: 4px;
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
 }
 
 .app-nav a {
@@ -198,11 +268,19 @@ a {
 .card {
   width: 100%;
   max-width: 480px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background: var(--glass-panel);
+  border: 1px solid var(--glass-border-warm);
+  border-radius: 20px;
   padding: 32px;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .card {
+    background: var(--panel);
+  }
 }
 
 .card h1 {
@@ -219,11 +297,13 @@ a {
 .dropzone {
   display: block;
   border: 2px dashed var(--border-strong);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 32px 16px;
   text-align: center;
   cursor: pointer;
-  background: var(--panel-alt);
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
@@ -275,9 +355,11 @@ a {
    action, blue = secondary action/links. */
 .secondary-button {
   padding: 12px 16px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--glass-border-warm);
   border-radius: 10px;
-  background: var(--panel);
+  background: var(--glass-panel-strong);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
   color: var(--text);
   font-size: 15px;
   font-weight: 600;
@@ -419,11 +501,19 @@ code {
 
 .library-panel {
   width: 100%;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background: var(--glass-panel);
+  border: 1px solid var(--glass-border-warm);
+  border-radius: 20px;
   padding: 32px;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .library-panel {
+    background: var(--panel);
+  }
 }
 
 .library-status {
@@ -534,9 +624,11 @@ code {
   flex-direction: column;
   gap: 4px;
   padding: 16px;
-  background: var(--panel-alt);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--glass-border-warm);
+  border-radius: 14px;
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
 }
 
 .stat-label {
@@ -751,18 +843,32 @@ code {
   display: flex;
 }
 
+/* A soft two-tone glass "tile" (the gradient-tile treatment from the
+   glassmorphism reference), tinted with the two brand accents at low
+   opacity over the glass base rather than the reference's saturated dark
+   gradients — keeps the label text readable without a separate light
+   on-tile text scheme. */
 .video-placeholder {
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: var(--panel);
-  border: 1px dashed var(--border-strong);
-  border-radius: 16px;
-  box-shadow: var(--shadow-sm);
+  background: radial-gradient(120% 120% at 0% 0%, rgba(231, 63, 30, 0.14), transparent 60%),
+    radial-gradient(120% 120% at 100% 100%, rgba(0, 125, 204, 0.12), transparent 60%), var(--glass-panel);
+  border: 1px solid var(--glass-border-warm);
+  border-radius: 20px;
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .video-placeholder {
+    background: var(--panel);
+  }
 }
 
 .video-placeholder .play-icon {
@@ -830,15 +936,16 @@ code {
   --chat--header--color: #ffffff;
   --chat--heading--font-size: 1.375em;
 
-  /* Message list area sits on the cream page background; bot bubbles get a
-     white surface + hairline border so they read as distinct "cards" against
-     that background (a plain color match alone is too low-contrast to be
-     legible as a bubble boundary — see the panel-vs-bg contrast note in the
-     design doc). User bubbles are filled with the accent and white text. */
-  --chat--body--background: var(--bg);
-  --chat--message--bot--background: var(--panel);
+  /* Message list is transparent so the page's aurora blobs show through
+     behind it, matching the rest of the app's glass treatment. Bubbles
+     themselves stay near-opaque, though — the widget can't apply
+     backdrop-filter to its own internal elements from here, and dense
+     conversation text needs to stay legible more than it needs to be
+     glassy; a plain alpha fade without blur would just look washed out. */
+  --chat--body--background: transparent;
+  --chat--message--bot--background: var(--glass-panel-strong);
   --chat--message--bot--color: var(--text);
-  --chat--message--bot--border: 1px solid var(--border);
+  --chat--message--bot--border: 1px solid var(--glass-border-warm);
   --chat--message--user--background: var(--accent);
   --chat--message--user--color: #ffffff;
   --chat--message--pre--background: rgba(43, 33, 29, 0.06);
@@ -846,7 +953,7 @@ code {
   /* Input field: white surface + visible border so it's distinguishable from
      both the cream body behind it and the white bot bubbles above it, with an
      accent-colored active/focus border for a clear, accessible focus state. */
-  --chat--input--background: var(--panel);
+  --chat--input--background: var(--glass-panel-strong);
   --chat--input--text-color: var(--text);
   --chat--input--border: 1px solid var(--border-strong);
   /* Consumed by the widget as `border-color: var(--chat--input--border-active)`
