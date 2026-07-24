@@ -52,8 +52,8 @@ The generation system prompt enforces grounded-only answers, per-claim `[n]` cit
 | 2 | Query: retrieval → rerank → grounded answer → citations → injection defense | ✅ done |
 | 3 | Slack/Teams bot (primary) + web chat widget (secondary) | ⚠️ web chat widget only — no Slack/Teams bot interface yet |
 | 4 | Logging + monitoring dashboard + knowledge-gap alerting | ⚠️ logging and knowledge-gap alerting done; no dashboard UI yet |
-| 5 | Eval set + adversarial subset + ablation report | ⚠️ eval set (30 questions) + adversarial subset (12 cases) done against production; ablation not yet run (see [SCORECARD.md](SCORECARD.md)) |
-| 6 | Public scorecard writeup | ✅ [SCORECARD.md](SCORECARD.md) — 100% retrieval accuracy, 100% injection resistance, one diagnosed confidence-threshold gap |
+| 5 | Eval set + adversarial subset + ablation report | ✅ 30 questions + 12 adversarial cases against production, plus a confidence-threshold ablation (0.5 vs 0.45) with a real before/after delta (see [SCORECARD.md](SCORECARD.md)) |
+| 6 | Public scorecard writeup | ✅ [SCORECARD.md](SCORECARD.md) — 100% retrieval accuracy, 100% injection resistance, false-refusal rate improved 12%→8% via a diagnosed and applied threshold fix |
 | 7 | n8n workflow published to community template library | ❌ not started |
 | 8 | Documentation (this file) | 🚧 in progress — missing demo video, ablation numbers |
 

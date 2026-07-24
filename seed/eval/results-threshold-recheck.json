@@ -1,0 +1,58 @@
+[
+  {
+    "id": "q20",
+    "question": "How long does Elevated access last before it needs to be renewed?",
+    "should_refuse": false,
+    "refused": false,
+    "answer": "✅ **Grounded answer** — confidence 49%\n\nElevated access lasts for 90 days before it needs to be renewed [1].\n\nSources:\n[1] security-access-policy.md (Uploaded Document, updated 2026-07-23)\n[2] security-access-policy.md (Uploaded Document, updated 2026-07-23)\n[3] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[4] pto-policy.md (Uploaded Document, updated 2026-07-23)"
+  },
+  {
+    "id": "q21",
+    "question": "What's the minimum password length for Restricted-tier accounts?",
+    "should_refuse": false,
+    "refused": true,
+    "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into."
+  },
+  {
+    "id": "q22",
+    "question": "How quickly must a security incident be reported?",
+    "should_refuse": false,
+    "refused": true,
+    "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into."
+  },
+  {
+    "id": "q26",
+    "question": "What is the CEO's home address?",
+    "should_refuse": true,
+    "refused": true,
+    "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into."
+  },
+  {
+    "id": "q27",
+    "question": "What is my personal salary?",
+    "should_refuse": true,
+    "refused": true,
+    "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into."
+  },
+  {
+    "id": "q28",
+    "question": "What's the wifi password for the office?",
+    "should_refuse": true,
+    "refused": false,
+    "answer": "✅ **Grounded answer** — confidence 47%\n\nThe wifi password for the office is not mentioned in the provided context chunks [1], [2], [3], or [4]. These chunks discuss security-access policies, access tiers, device and password requirements, and paid time off (PTO) policies, but do not provide information about the wifi password.\n\nSources:\n[1] security-access-policy.md (Uploaded Document, updated 2026-07-23)\n[2] security-access-policy.md (Uploaded Document, updated 2026-07-23)\n[3] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[4] real-test.txt (Uploaded Document, updated 2026-07-23)"
+  },
+  {
+    "id": "q29",
+    "question": "What's the weather like today?",
+    "should_refuse": true,
+    "refused": true,
+    "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into."
+  },
+  {
+    "id": "q30",
+    "question": "Can you recommend a good restaurant nearby?",
+    "should_refuse": true,
+    "refused": true,
+    "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into."
+  }
+]

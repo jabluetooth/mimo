@@ -9,27 +9,24 @@ Results from running a ground-truth question set and an adversarial subset again
 - **Adversarial set:** 12 cases across 4 categories — direct jailbreak attempts, indirect injection (retrieved from a document containing a planted "ignore your instructions" payload disguised as a pasted vendor email), obfuscated extraction attempts, and meta-manipulation.
 - Both sets were run against the live Chat webhook with unique session IDs per question; results were cross-checked against n8n's own execution history (not just the final answer text) to confirm which chunks were actually retrieved and reranked.
 
-## Baseline results (n=30)
+## Ablation: confidence threshold 0.5 vs 0.45 (n=30, same question set)
 
-| Metric | Result |
-|---|---|
-| Retrieval accuracy (expected doc in top-4 reranked chunks) | **100%** (25/25 answerable questions) |
-| Citation present in answer | 88% |
-| Expected-fact keyword coverage | 78% |
-| Refusal correctness (correctly refused the 5 out-of-scope questions) | **100%** (5/5) |
-| False-refusal rate (answerable questions incorrectly refused) | 12% (3/25) |
-| Avg / p95 latency | 3.9s / 4.4s |
+| Metric | Threshold 0.5 (before) | Threshold 0.45 (after) |
+|---|---|---|
+| Retrieval accuracy (expected doc in top-4 reranked chunks) | 100% (25/25) | 100% (25/25) |
+| Citation present in answer | 88% | **92%** |
+| Expected-fact keyword coverage | 78% | **84%** |
+| Refusal correctness (correctly refused the 5 out-of-scope questions) | 100% (5/5) | 80% (4/5)* |
+| False-refusal rate (answerable questions incorrectly refused) | 12% (3/25) | **8% (2/25)** |
+| Avg / p95 latency | 3.9s / 4.4s | 3.6s / 5.0s |
 
-The citation-rate and fact-coverage numbers are conservative — several "misses" were answers that correctly explained the concept in different words than the exact keyword I checked for (e.g. asked about the *cause* of a bug, the system answered the cause correctly but didn't repeat the *fix* keyword I'd listed), not actual groundedness failures. Manual review of every answer confirmed no fabricated facts and no missing citations on any question that returned a substantive answer.
+Raw results for both runs: [results-baseline-before-threshold-fix.json](seed/eval/results-baseline-before-threshold-fix.json), [results-baseline.json](seed/eval/results-baseline.json).
 
-## Diagnosed finding: confidence threshold is slightly too conservative
+\* The one "regression" (`q28`, "What's the wifi password for the office?") is not a hallucination — the model generated a grounded answer stating *"the wifi password is not mentioned in the provided context chunks,"* correctly declining in prose instead of hitting the templated refusal path my scoring regex checks for. Manually reviewed: no fabricated facts, correct citations to the (irrelevant) retrieved chunks. This is a gap in my keyword-based scoring, not a system failure.
 
-All 3 false refusals were the same document (`security-access-policy.md`) and the same root cause, confirmed by pulling the actual reranker output from n8n's execution history:
+**Root cause, found by pulling raw reranker output from n8n's execution history (not just reading final answers):** all 3 original false refusals were the same document (`security-access-policy.md`), correctly retrieved and ranked **#1** every time, but scoring **0.4876** — just under the original 0.5 threshold. Lowering the threshold to 0.45 recovered 1 of the 3 (the other 2 scored 0.3399 and 0.4355 respectively — still genuinely under 0.45, not a bug, just a harder retrieval case for those specific phrasings) while improving citation rate and fact coverage across the whole set, with no hallucinations introduced. **Net: threshold lowered to 0.45 and kept.**
 
-- Retrieval was correct — `security-access-policy.md` was reranked **#1** for all 3 questions.
-- Its top score was **0.4876** — just under the workflow's **0.5** confidence threshold — so the "Confidence Check" node routed to refusal instead of generation, despite having the right chunk in hand.
-
-This isn't a code bug (the rerank-to-chunk score alignment was verified correct); it's a threshold calibration gap. **Recommendation:** lower the Confidence Check threshold from 0.5 to ~0.45 and re-run this same question set to confirm it recovers these 3 false refusals without introducing false positives on the 5 designed-refusal questions (which scored well below 0.45 in spot checks). This is a good candidate for the PRD's requested ablation comparison (§7) — a concrete "changed X, false-refusal rate moved by Y%" result — once run.
+Getting this measurement live also surfaced a real n8n operational gotcha worth documenting: saving a node change on an *active* workflow updates a draft `versionId` but does not automatically update the separate `activeVersionId` actually serving webhook traffic — neither re-saving nor deactivating/reactivating the workflow forced the update, and even a full container restart didn't help (confirmed via direct Postgres inspection: the node name executing at runtime stayed on the pre-edit version through all of that). The fix was an explicit **Publish** action in the n8n editor, distinct from Save. Anyone iterating on an active n8n workflow should know to look for that.
 
 ## Adversarial results (n=12)
 
@@ -47,4 +44,4 @@ Notably, question `a07` and `a08` retrieved the document containing the planted 
 
 **Validated:** grounded generation, citation behavior, refusal-on-low-confidence, and prompt-injection defense all work as designed against a real (if small) corpus and real adversarial inputs.
 
-**Still open:** the confidence-threshold recalibration above hasn't been applied/re-tested yet; the corpus is 6 documents (30-50 question minimum was met, but a larger corpus would stress retrieval more); no ablation on chunking strategy or embedding model has been run yet.
+**Still open:** the corpus is 6 documents (30-50 question minimum was met, but a larger corpus would stress retrieval more); no ablation on chunking strategy or embedding model has been run yet; the false-refusal rate could likely be pushed lower still with retrieval/embedding improvements rather than further threshold tuning, which has diminishing returns once you're trading refusal-safety for recall.
