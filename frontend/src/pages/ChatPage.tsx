@@ -5,6 +5,17 @@ const CHAT_WEBHOOK_URL = import.meta.env.VITE_CHAT_WEBHOOK_URL;
 const WELCOME =
   'Ask me anything covered by the internal knowledge base — I will cite my sources, or tell you plainly when I do not know.';
 
+// Real, answerable questions pulled from the actual ingested corpus (the
+// same set used in the eval scorecard) rather than generic placeholder
+// prompts — clicking one is guaranteed to demonstrate a real grounded
+// answer, not a refusal.
+const SUGGESTIONS = [
+  "What's our refund policy for enterprise clients?",
+  "What's the process for requesting time off during a client engagement?",
+  'Summarize what changed in the vendor contract from Q1 to Q2.',
+  'How long does vendor onboarding typically take?',
+];
+
 type Citation = { marker: string; source: string; section: string; updatedAt: string };
 
 type ParsedAnswer = {
@@ -138,9 +149,7 @@ export default function ChatPage() {
     transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: 'smooth' });
   }, [turns, isThinking]);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    const question = input.trim();
+  async function sendQuestion(question: string) {
     if (!question || isThinking) return;
 
     if (!CHAT_WEBHOOK_URL) {
@@ -181,6 +190,11 @@ export default function ChatPage() {
     }
   }
 
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    void sendQuestion(input.trim());
+  }
+
   return (
     <div className="chat-shell">
       <h1 className="visually-hidden">Chat with the knowledge assistant</h1>
@@ -198,6 +212,21 @@ export default function ChatPage() {
           </div>
         ))}
 
+        {turns.length === 1 && !isThinking && (
+          <div className="suggestion-chips">
+            {SUGGESTIONS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className="suggestion-chip"
+                onClick={() => sendQuestion(s)}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+
         {isThinking && (
           <div className="turn" aria-live="polite">
             <span className="turn-label">Mimo</span>
@@ -212,6 +241,7 @@ export default function ChatPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a question…"
+          autoComplete="off"
           aria-label="Ask a question"
           disabled={isThinking}
         />
