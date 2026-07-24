@@ -7,6 +7,7 @@ const LandingPage = lazy(() => import('./pages/LandingPage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
 const UploadPage = lazy(() => import('./pages/UploadPage'));
 const LibraryPage = lazy(() => import('./pages/LibraryPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 
 export default function App() {
   // The chat widget wants to fill the whole viewport below the header; every
@@ -35,6 +36,9 @@ export default function App() {
           <NavLink to="/library" className={({ isActive }) => (isActive ? 'active' : '')}>
             Library
           </NavLink>
+          <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Dashboard
+          </NavLink>
         </nav>
       </header>
 
@@ -45,6 +49,7 @@ export default function App() {
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/library" element={<LibraryPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
           </Routes>
         </Suspense>
       </main>

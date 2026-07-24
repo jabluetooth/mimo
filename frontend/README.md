@@ -4,8 +4,10 @@ Two-page frontend for Mimo, the RAG Internal Knowledge Assistant portfolio proje
 
 - **/chat** — embeds n8n's `@n8n/chat` widget, wired to the query workflow's Chat Trigger.
 - **/upload** — drag-and-drop upload form that POSTs documents to the ingestion workflow's webhook.
+- **/library** — lists ingested documents via the "List Documents" n8n workflow.
+- **/dashboard** — query volume, refusal rate, and latency stats via the "Dashboard Stats" n8n workflow (`../n8n/dashboard-stats-workflow.json`), which reads the `query_logs` table in Neon.
 
-Both pages just call n8n webhooks directly; there is no backend of its own here.
+All pages just call n8n webhooks directly; there is no backend of its own here.
 
 ## Setup
 

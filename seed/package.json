@@ -17,6 +17,7 @@
     "@qdrant/js-client-rest": "^1.18.0",
     "dotenv": "^17.4.2",
     "flatted": "^3.4.3",
-    "gray-matter": "^4.0.3"
+    "gray-matter": "^4.0.3",
+    "pg": "^8.22.0"
   }
 }
