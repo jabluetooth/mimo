@@ -254,14 +254,11 @@ export default function ChatPage() {
           <h2>Your knowledge base is empty</h2>
           <p className="chat-empty-body">
             Mimo answers questions from documents that have been uploaded — there aren't any yet, so there's
-            nothing to ground an answer in.
-            {user?.role === 'admin' ? ' Upload one first, then come back here to ask about it.' : ' Ask an admin to upload one.'}
+            nothing to ground an answer in. Upload one first, then come back here to ask about it.
           </p>
-          {user?.role === 'admin' && (
-            <Link to="/upload" className="primary-button cta-button">
-              Upload a document
-            </Link>
-          )}
+          <Link to="/upload" className="primary-button cta-button">
+            Upload a document
+          </Link>
         </div>
       </div>
     );

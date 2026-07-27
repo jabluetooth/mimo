@@ -36,15 +36,13 @@ function AuthNav() {
       <NavLink to="/library" className={({ isActive }) => (isActive ? 'active' : '')}>
         Library
       </NavLink>
+      <NavLink to="/upload" className={({ isActive }) => (isActive ? 'active' : '')}>
+        Upload
+      </NavLink>
       {user.role === 'admin' && (
-        <>
-          <NavLink to="/upload" className={({ isActive }) => (isActive ? 'active' : '')}>
-            Upload
-          </NavLink>
-          <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>
-            Dashboard
-          </NavLink>
-        </>
+        <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Dashboard
+        </NavLink>
       )}
       <button type="button" className="nav-account" title={`${user.email} (${user.role})`} onClick={logout}>
         Log out
@@ -93,9 +91,9 @@ function AppShell() {
             <Route
               path="/upload"
               element={
-                <RequireAdmin>
+                <RequireAuth>
                   <UploadPage />
-                </RequireAdmin>
+                </RequireAuth>
               }
             />
             <Route

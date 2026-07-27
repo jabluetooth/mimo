@@ -82,10 +82,17 @@ export default function LibraryPage() {
   return (
     <div className="library-page">
       <div className="library-header">
-        <h1>Knowledge base</h1>
-        <p className="subtitle">
-          Documents currently ingested and searchable by the chat assistant.
-        </p>
+        <div className="library-header-text">
+          <h1>Knowledge base</h1>
+          <p className="subtitle">
+            Documents currently ingested and searchable by the chat assistant.
+          </p>
+        </div>
+        {state.kind === 'loaded' && state.documents.length > 0 && (
+          <Link to="/upload" className="secondary-button library-upload-button">
+            Upload document
+          </Link>
+        )}
       </div>
 
       <div className="library-panel">
@@ -109,11 +116,9 @@ export default function LibraryPage() {
         {state.kind === 'loaded' && state.documents.length === 0 && (
           <div className="library-empty" role="status" aria-live="polite">
             <p>No documents have been ingested yet.</p>
-            {user?.role === 'admin' && (
-              <Link to="/upload" className="primary-button cta-button">
-                Upload the first document
-              </Link>
-            )}
+            <Link to="/upload" className="primary-button cta-button">
+              Upload the first document
+            </Link>
           </div>
         )}
 

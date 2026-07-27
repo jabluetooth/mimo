@@ -559,6 +559,14 @@ code {
   gap: 20px;
 }
 
+.library-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .library-header h1 {
   margin: 0 0 4px;
 }
@@ -567,6 +575,11 @@ code {
   color: var(--muted);
   font-size: 14px;
   margin: 0;
+}
+
+.library-upload-button {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .library-panel {
