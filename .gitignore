@@ -19,3 +19,9 @@ dist/
 # OS / editor cruft
 .DS_Store
 Thumbs.db
+
+# Internal/dev docs kept locally, not published to GitHub
+/PRD-RAG-Internal-Assistant.md
+/RBAC-SETUP.md
+/SCORECARD.md
+/frontend/README.md

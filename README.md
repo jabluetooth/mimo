@@ -1,10 +1,30 @@
-# Mimo — Internal Knowledge Assistant (RAG-powered)
+# Mimo — RAG-Powered Internal Knowledge Assistant
 
-Employees waste time re-asking questions that are already answered in company docs; Mimo retrieves the right passage from your knowledge base and answers with a citation instead of a guess. Full requirements in [PRD-RAG-Internal-Assistant.md](PRD-RAG-Internal-Assistant.md).
+Employees waste time re-asking questions that are already answered in company docs. Mimo retrieves the right passage from a private knowledge base and answers with a citation instead of a guess — refusing to answer when it isn't confident, rather than hallucinating.
 
-**Live demo:** https://mimo-one-delta.vercel.app ([chat](https://mimo-one-delta.vercel.app/chat) · [upload](https://mimo-one-delta.vercel.app/upload) · [library](https://mimo-one-delta.vercel.app/library) · [dashboard](https://mimo-one-delta.vercel.app/dashboard))
+**Live demo:** [mimo-one-delta.vercel.app](https://mimo-one-delta.vercel.app) — [chat](https://mimo-one-delta.vercel.app/chat) · [upload](https://mimo-one-delta.vercel.app/upload) · [library](https://mimo-one-delta.vercel.app/library) · [dashboard](https://mimo-one-delta.vercel.app/dashboard) (sign up for a free account to try it)
 
-**Demo video:** not recorded yet.
+## Highlights
+
+- **Grounded RAG pipeline** — vector retrieval → cross-encoder reranking → confidence-gated generation, with per-claim `[n]` citations and an explicit refusal path instead of hallucinated answers on low-confidence retrieval.
+- **Measured prompt-injection resistance** — retrieved content is treated as untrusted data in the system prompt design, verified with a 12-case adversarial test suite (direct jailbreaks, indirect injection via a planted payload, obfuscated extraction, meta-manipulation).
+- **Real authentication and role-based access control** — custom email/password auth issuing signed JWTs (no third-party auth vendor), with retrieval-level enforcement: documents marked admin-only are filtered out of a regular user's results server-side, not just hidden in the UI.
+- **Eval-driven, not vibes-driven** — a 30-question ground-truth set plus the adversarial suite run against the live production system, with a documented ablation (confidence threshold 0.5 → 0.45) showing a measured before/after tradeoff, not a guess.
+- **Live observability** — a dashboard reading real production logs: query volume, refusal rate, latency percentiles, and a Slack alert fired automatically whenever the assistant can't find an answer (a live signal for knowledge-base gaps).
+
+## Results
+
+Measured against the live production system (not a local mock):
+
+| Metric | Result |
+|---|---|
+| Retrieval accuracy (expected document in top-4 reranked chunks) | **100%** (25/25) |
+| Prompt-injection resistance (adversarial suite) | **100%** (12/12) |
+| False-refusal rate, after a diagnosed threshold fix | 12% → **8%** |
+| Citation present in answer | 88% → **92%** |
+| Expected-fact keyword coverage | 78% → **84%** |
+
+The threshold fix was found by pulling raw reranker scores from the retrieval pipeline's execution history rather than trusting the final answer text — the false refusals all pointed to the same document, correctly retrieved and ranked #1 every time, just scoring under the original confidence cutoff.
 
 ## Architecture
 
@@ -29,46 +49,25 @@ flowchart LR
     end
 ```
 
-Everything above is a single active n8n workflow ("Mimo RAG - Combined Workflow"), not separate sub-workflows as originally scoped in the PRD — the split-out "RAG Ingestion Workflow" and "RAG List Documents Workflow" exist but are deprecated/inactive in favor of the combined one.
+Auth, chat, upload, library, and the dashboard endpoint all run as one orchestrated n8n workflow, gated per-route by JWT verification and role checks.
 
-| Layer | Actual implementation |
+| Layer | Implementation |
 |---|---|
 | Orchestration | n8n (self-hosted, Docker) |
-| LLM | **Groq** (Llama 3.3 70B via `lmChatGroq`) — PRD originally specified Claude; switched to Groq |
+| LLM | Groq (Llama 3.3 70B) |
 | Embeddings | Hugging Face Inference API (`BAAI/bge-small-en-v1.5`) |
 | Vector DB | Qdrant (self-hosted, Docker) |
-| Reranker | HuggingFace rerank endpoint via HTTP Request node |
-| Frontend | Vite/React, 7 pages: landing, chat (bespoke UI, no widget), upload, library, dashboard, login, signup — deployed on Vercel |
-| Logging | Postgres/Neon (`Log Answered Query` / `Log Refused Query` → `query_logs` table) |
-| Knowledge-gap alerting | Slack node fired on refusal |
-| Auth / RBAC | Custom email+password (salted HMAC-SHA256 + server pepper, no third-party auth service) issuing HS256 JWTs via a dedicated n8n workflow; roles are `admin`/`member`, stored in a Neon `users` table |
-
-The generation system prompt enforces grounded-only answers, per-claim `[n]` citations, explicit ambiguity surfacing, and treats retrieved content as untrusted data (prompt-injection defense) — see FR-9–FR-12 in the PRD.
-
-## Status vs. PRD milestones (§9)
-
-| # | Milestone | Status |
-|---|---|---|
-| 1 | Ingestion: chunk → embed → Qdrant | ✅ done, but via manual upload webhook, not scheduled Google Drive sync (FR-1/FR-3 gap) |
-| 2 | Query: retrieval → rerank → grounded answer → citations → injection defense | ✅ done |
-| 3 | Slack/Teams bot (primary) + web chat widget (secondary) | ⚠️ web chat widget only — no Slack/Teams bot interface yet |
-| 4 | Logging + monitoring dashboard + knowledge-gap alerting | ✅ done — [/dashboard](https://mimo-one-delta.vercel.app/dashboard) shows query volume, refusal rate, latency (avg/p50/p95), and recent queries from real production logs |
-| 5 | Eval set + adversarial subset + ablation report | ✅ 30 questions + 12 adversarial cases against production, plus a confidence-threshold ablation (0.5 vs 0.45) with a real before/after delta (see [SCORECARD.md](SCORECARD.md)) |
-| 6 | Public scorecard writeup | ✅ [SCORECARD.md](SCORECARD.md) — 100% retrieval accuracy, 100% injection resistance, false-refusal rate improved 12%→8% via a diagnosed and applied threshold fix |
-| 7 | n8n workflow published to community template library | ❌ not started |
-| 8 | Documentation (this file) | 🚧 in progress — missing demo video, ablation numbers |
-
-Hybrid (vector + keyword) retrieval from FR-6 is also not implemented — retrieval is vector-only, with reranking as the quality safeguard.
-
-**Role-based access control** (listed in the PRD's §11 "Out of Scope (v1) / Future Work") is now implemented ahead of that schedule: chat and the library require login, upload and the dashboard require the `admin` role, and retrieval itself filters out `admin`-only documents from a `member`'s results server-side — not just hidden in the UI. See [RBAC-SETUP.md](RBAC-SETUP.md) for the n8n-side setup steps and known limitations (the password hashing scheme in particular is deliberately scoped for this project's size, not bank-grade).
+| Reranker | HuggingFace cross-encoder reranking |
+| Frontend | Vite/React — landing, chat, upload, library, dashboard, login, signup |
+| Logging | Postgres (Neon) — `query_logs` table backing the dashboard |
+| Alerting | Slack, fired on low-confidence refusal |
+| Auth / RBAC | Salted HMAC-SHA256 password hashing + server pepper, HS256 JWTs, `admin`/`member` roles enforced at the retrieval layer |
 
 ## Repo layout
 
-- `frontend/` — the Vite/React app (landing, chat, upload, library, dashboard pages). See [frontend/README.md](frontend/README.md) for local setup and env vars.
-- `seed/` — standalone Node scripts (`ingest.js`, `query.js`) that chunk sample markdown docs, embed them via the HF API, and upsert/query a local Qdrant instance, plus the [seed/eval/](seed/eval/) eval harness used for [SCORECARD.md](SCORECARD.md). Useful for testing retrieval/eval in isolation, without touching the production n8n workflow or its Qdrant collection.
-- `n8n/` — `mimo-workflow.json`, the exported n8n workflow (auth, chat, upload, library, dashboard stats, all RBAC-gated), importable via n8n's "Import from File" — see [RBAC-SETUP.md](RBAC-SETUP.md) for how to apply it — plus `generate-secrets.js` for generating the JWT/pepper secrets it needs.
-- `PRD-RAG-Internal-Assistant.md` — full requirements doc.
-- `RBAC-SETUP.md` — manual n8n-side setup steps for the auth/RBAC system (credentials, workflow import, first-admin promotion).
+- `frontend/` — the Vite/React app (landing, chat, upload, library, dashboard pages).
+- `seed/` — standalone Node scripts (`ingest.js`, `query.js`) for chunking, embedding, and querying a local Qdrant instance in isolation, plus the eval harness behind the results above.
+- `n8n/` — `mimo-workflow.json`, the exported n8n workflow, plus `generate-secrets.js` for generating the auth secrets it needs.
 
 ## Local setup
 
@@ -89,4 +88,9 @@ node ingest.js
 node query.js
 ```
 
-The n8n workflow itself ("Mimo RAG - Combined Workflow") runs on the author's own n8n instance and isn't yet exported into this repo for others to import (tracked under Milestone 7 above).
+## Known limitations
+
+- Password hashing is salted HMAC-SHA256 with a server-side pepper rather than bcrypt/scrypt/argon2 — deliberately scoped for this project's size, not intended for a large production user base as-is.
+- No password reset flow, no email verification, no login rate-limiting yet.
+- Ingestion is a manual upload rather than a scheduled sync from an external source (e.g. Google Drive).
+- Retrieval is vector-only; hybrid vector + keyword search is a natural next step.
