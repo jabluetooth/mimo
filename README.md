@@ -94,3 +94,7 @@ node query.js
 - No password reset flow, no email verification, no login rate-limiting yet.
 - Ingestion is a manual upload rather than a scheduled sync from an external source (e.g. Google Drive).
 - Retrieval is vector-only; hybrid vector + keyword search is a natural next step.
+
+## Changelog
+
+- **2026-07-29** — The signup/login password-hashing nodes (`Hash Password (Signup)`, `Hash Submitted Password (Login)`) previously ran HMAC with no key configured, which silently drops the security benefit of using HMAC at all. Both nodes are now bound to a dedicated n8n `crypto` credential holding the server-side pepper, so signup and login use the identical keyed hash. **Note:** if any accounts were registered before this fix, their stored password hash was computed unkeyed and will no longer match on login — those accounts need a password reset.
