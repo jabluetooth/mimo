@@ -2,7 +2,7 @@
 
 Employees waste time re-asking questions that are already answered in company docs. Mimo retrieves the right passage from a private knowledge base and answers with a citation instead of a guess - refusing to answer when it isn't confident, rather than hallucinating.
 
-[![Live](https://img.shields.io/badge/Live_Demo-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://mimoby.filheinzrelatorre.com)
+[![Live](https://img.shields.io/badge/Live_Demo-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://mimo-one-delta.vercel.app)
 
 ![n8n](https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)
@@ -19,7 +19,7 @@ Employees waste time re-asking questions that are already answered in company do
      add here as: -->
 <!-- <p align="center"><img src="docs/demo.gif" alt="Mimo demo" width="800"></p> -->
 
-**Live demo:** [mimoby.filheinzrelatorre.com](https://mimoby.filheinzrelatorre.com) - [chat](https://mimoby.filheinzrelatorre.com/chat) · [upload](https://mimoby.filheinzrelatorre.com/upload) · [library](https://mimoby.filheinzrelatorre.com/library) · [dashboard](https://mimoby.filheinzrelatorre.com/dashboard) (sign up for a free account to try it)
+**Live demo:** [mimo-one-delta.vercel.app](https://mimo-one-delta.vercel.app) - [chat](https://mimo-one-delta.vercel.app/chat) · [upload](https://mimo-one-delta.vercel.app/upload) · [library](https://mimo-one-delta.vercel.app/library) · [dashboard](https://mimo-one-delta.vercel.app/dashboard) (sign up for a free account to try it)
 
 ## Highlights
 
