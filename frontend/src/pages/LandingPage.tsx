@@ -8,9 +8,9 @@ export default function LandingPage() {
           <p className="hero-eyebrow">RAG internal knowledge assistant</p>
           <h1>Ask your internal docs a question. Get an answer with receipts.</h1>
           <p className="hero-lede">
-            Mimo is a portfolio project demonstrating a retrieval-augmented generation
-            assistant: it answers questions from a private knowledge base and cites where
-            each answer came from, or says so plainly when it doesn't know.
+            Mimo is a retrieval-augmented generation assistant: it answers questions from
+            a private knowledge base and cites where each answer came from, or says so
+            plainly when it doesn't know.
           </p>
           <div className="cta-row">
             <Link to="/chat" className="primary-button cta-button">
