@@ -13,11 +13,6 @@ const SITE_LINKS: FooterLink[] = [
   { label: 'Sign in', to: '/login' },
 ];
 
-const PROJECT_LINKS: FooterLink[] = [
-  { label: 'Insight', to: 'https://insightby.filheinzrelatorre.com', external: true },
-  { label: 'Bonny AI', to: 'https://www.filheinzrelatorre.com', external: true },
-];
-
 const SOCIAL_LINKS = [
   { label: 'GitHub', href: 'https://github.com/jabluetooth', Icon: GitHubIcon },
   { label: 'LinkedIn', href: 'https://ph.linkedin.com/in/filheinzrelatorre', Icon: LinkedInIcon },
@@ -86,7 +81,6 @@ export function Footer() {
 
         <nav aria-label="Footer" className="footer-links-panel">
           <FooterColumn title="Site" links={SITE_LINKS} />
-          <FooterColumn title="More projects" links={PROJECT_LINKS} />
         </nav>
       </div>
     </footer>

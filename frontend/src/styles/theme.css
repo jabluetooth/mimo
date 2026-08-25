@@ -1627,7 +1627,7 @@ code {
 }
 
 .footer-links-panel {
-  flex: 0 1 380px;
+  flex: 0 1 200px;
   display: flex;
   gap: 32px;
   padding: 24px 24px 20px;
