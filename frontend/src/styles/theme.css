@@ -1542,3 +1542,141 @@ code {
     width: 100%;
   }
 }
+
+/* Footer — same two-panel format as this project's sibling portfolio
+   pieces: an accent brand panel + a glass links panel, both rounded on the
+   top corners only and flush at the bottom (no radius/border/padding
+   there) so they read as cut off by the page's own edge rather than
+   floating as closed rectangles. */
+
+.site-footer {
+  margin-top: auto;
+  padding: 24px 16px 0;
+}
+
+.site-footer-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 16px 24px;
+}
+
+.footer-brand-panel {
+  flex: 1 1 240px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 24px 20px;
+  border-radius: 20px 20px 0 0;
+  background: var(--accent);
+  color: #fff;
+}
+
+.footer-wordmark {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 23px;
+  letter-spacing: 0.1px;
+}
+
+.footer-brand-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-tagline {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.85;
+  max-width: 34ch;
+  margin: 0;
+}
+
+.footer-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.footer-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: #fff;
+  opacity: 0.8;
+  transition: opacity 0.15s ease;
+}
+
+.footer-icon-link:hover {
+  opacity: 1;
+}
+
+.footer-copyright {
+  font-family: var(--font-body);
+  font-size: 12px;
+  opacity: 0.7;
+  margin: 0;
+}
+
+.footer-links-panel {
+  flex: 0 1 380px;
+  display: flex;
+  gap: 32px;
+  padding: 24px 24px 20px;
+  border-radius: 20px 20px 0 0;
+  border: 1px solid var(--glass-border-warm);
+  background: var(--glass-panel);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .footer-links-panel {
+    background: var(--panel);
+  }
+}
+
+.footer-col-title {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 0 0 12px 0;
+}
+
+.footer-col-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-col-list a {
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+
+.footer-col-list a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  .footer-links-panel {
+    gap: 24px;
+  }
+}

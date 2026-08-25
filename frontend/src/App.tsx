@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Link, NavLink, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { RequireAdmin, RequireAuth } from './auth/RequireAuth';
+import { Footer } from './components/Footer';
 
 // Code-split each route so no page pays for another's dependency weight.
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -107,6 +108,8 @@ function AppShell() {
           </Routes>
         </Suspense>
       </main>
+
+      <Footer />
     </div>
   );
 }
