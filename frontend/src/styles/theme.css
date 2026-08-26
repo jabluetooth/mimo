@@ -1498,10 +1498,13 @@ code {
 
   .app-nav {
     align-self: stretch;
+    flex-wrap: wrap;
   }
 
-  .app-nav a {
-    flex: 1;
+  .app-nav a,
+  .app-nav .nav-account {
+    flex: 1 1 auto;
+    min-width: 84px;
     text-align: center;
   }
 
