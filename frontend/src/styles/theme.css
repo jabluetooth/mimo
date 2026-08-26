@@ -1681,5 +1681,10 @@ code {
 @media (max-width: 480px) {
   .footer-links-panel {
     gap: 24px;
+    flex-basis: 100%;
+  }
+
+  .footer-brand-panel {
+    min-height: 0;
   }
 }
