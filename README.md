@@ -12,12 +12,7 @@ Employees waste time re-asking questions that are already answered in company do
 
 <br>
 
-<!-- HERO: short GIF (10-15s) of asking a question in /chat, the grounded answer
-     streaming in with a visible [n] citation, then one more question that should
-     trigger the refusal path (something not in the knowledge base) to show that half
-     of the pitch too - grounded-or-refuses is the whole point. Save as docs/demo.gif,
-     add here as: -->
-<!-- <p align="center"><img src="docs/demo.gif" alt="Mimo demo" width="800"></p> -->
+<p align="center"><img src="docs/demo.gif" alt="Mimo demo" width="800"></p>
 
 **Live demo:** [mimoby.filheinzrelatorre.com](https://mimoby.filheinzrelatorre.com) - [chat](https://mimoby.filheinzrelatorre.com/chat) · [upload](https://mimoby.filheinzrelatorre.com/upload) · [library](https://mimoby.filheinzrelatorre.com/library) · [dashboard](https://mimoby.filheinzrelatorre.com/dashboard) (sign up for a free account to try it)
 
