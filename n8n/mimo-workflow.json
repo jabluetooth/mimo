@@ -21,7 +21,102 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT count(*)::int AS cnt FROM users WHERE email = $1;",
+        "query": "SELECT count(*)::int AS attempts FROM auth_attempts WHERE identifier = lower($1) AND kind = 'signup' AND created_at > now() - interval '1 hour';",
+        "options": {
+          "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email] }}"
+        }
+      },
+      "id": "b1c2d3e4-1001-4a1a-9a1a-100000000001",
+      "name": "Count Recent Signup Attempts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1568,
+        -784
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.attempts }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              },
+              "rightValue": 5
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b1c2d3e4-1002-4a1a-9a1a-100000000002",
+      "name": "Too Many Signup Attempts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1520,
+        -784
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": \"Too many signup attempts for this email. Try again later.\" } }}",
+        "options": {
+          "responseCode": 429
+        }
+      },
+      "id": "b1c2d3e4-1003-4a1a-9a1a-100000000003",
+      "name": "Respond Rate Limited (Signup)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -1472,
+        -880
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO auth_attempts (identifier, kind) VALUES (lower($1), 'signup');",
+        "options": {
+          "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email] }}"
+        }
+      },
+      "id": "b1c2d3e4-1004-4a1a-9a1a-100000000004",
+      "name": "Record Signup Attempt",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1472,
+        -688
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT count(*)::int AS cnt FROM users WHERE lower(email) = lower($1);",
         "options": {
           "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email] }}"
         }
@@ -129,7 +224,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO users (email, password_hash, password_salt) VALUES ($1, $2, $3) RETURNING id, email, role;",
+        "query": "INSERT INTO users (email, password_hash, password_salt) VALUES (lower($1), $2, $3) RETURNING id, email, role;",
         "options": {
           "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email, $json.passwordHash, $('Generate Salt (Signup)').item.json.salt] }}"
         }
@@ -242,7 +337,102 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT count(*)::int AS cnt FROM users WHERE email = $1;",
+        "query": "SELECT count(*)::int AS attempts FROM auth_attempts WHERE identifier = lower($1) AND kind = 'login' AND created_at > now() - interval '15 minutes';",
+        "options": {
+          "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
+        }
+      },
+      "id": "c1d2e3f4-2001-4a1a-9a1a-200000000001",
+      "name": "Count Recent Login Attempts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1568,
+        -336
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.attempts }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              },
+              "rightValue": 10
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c1d2e3f4-2002-4a1a-9a1a-200000000002",
+      "name": "Too Many Login Attempts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1520,
+        -336
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": \"Too many login attempts. Try again in a few minutes.\" } }}",
+        "options": {
+          "responseCode": 429
+        }
+      },
+      "id": "c1d2e3f4-2003-4a1a-9a1a-200000000003",
+      "name": "Respond Rate Limited (Login)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -1472,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO auth_attempts (identifier, kind) VALUES (lower($1), 'login');",
+        "options": {
+          "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
+        }
+      },
+      "id": "c1d2e3f4-2004-4a1a-9a1a-200000000004",
+      "name": "Record Login Attempt",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1472,
+        -240
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vpxcyopVxuS0Ln4s",
+          "name": "RAG Neon"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT count(*)::int AS cnt FROM users WHERE lower(email) = lower($1);",
         "options": {
           "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
         }
@@ -315,7 +505,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT id, email, password_hash, password_salt, role FROM users WHERE email = $1 LIMIT 1;",
+        "query": "SELECT id, email, password_hash, password_salt, role FROM users WHERE lower(email) = lower($1) LIMIT 1;",
         "options": {
           "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
         }
@@ -358,6 +548,19 @@
     },
     {
       "parameters": {
+        "jsCode": "// Constant-time comparison so a failed login doesn't leak how many\n// leading hex characters of the stored hash the guess got right via response timing.\nfunction timingSafeEqualHex(a, b) {\n  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;\n  let diff = 0;\n  for (let i = 0; i < a.length; i++) {\n    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);\n  }\n  return diff === 0;\n}\n\nconst submitted = $json.passwordHash;\nconst stored = $('Fetch User (Login)').item.json.password_hash;\n\nreturn [{ json: { passwordMatches: timingSafeEqualHex(submitted, stored) } }];"
+      },
+      "id": "d3f1a2b4-8c7e-4a1d-9f3b-6e2c1a0b9d5f",
+      "name": "Constant-Time Compare (Login)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -628,
+        -180
+      ]
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -367,12 +570,12 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ $json.passwordHash }}",
+              "leftValue": "={{ $json.passwordMatches }}",
               "operator": {
-                "type": "string",
+                "type": "boolean",
                 "operation": "equals"
               },
-              "rightValue": "={{ $('Fetch User (Login)').item.json.password_hash }}"
+              "rightValue": true
             }
           ],
           "combinator": "and"
@@ -565,10 +768,6 @@
       ],
       "executeOnce": true,
       "credentials": {
-        "httpBearerAuth": {
-          "id": "8R0KIZW3bgzKz19K",
-          "name": "ZeroPress"
-        },
         "huggingFaceApi": {
           "id": "E6JDQAYv67yFmCcj",
           "name": "RAG"
@@ -1201,9 +1400,27 @@
         "assignments": {
           "assignments": [
             {
-              "id": "output",
-              "name": "output",
-              "value": "={{ $(\"Shape Success Result\").item.json.replyText }}",
+              "id": "status",
+              "name": "status",
+              "value": "grounded",
+              "type": "string"
+            },
+            {
+              "id": "confidence",
+              "name": "confidence",
+              "value": "={{ $(\"Build Grounded Context\").item.json.topScore }}",
+              "type": "number"
+            },
+            {
+              "id": "body",
+              "name": "body",
+              "value": "={{ $(\"Generate Grounded Answer\").item.json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "citationsJson",
+              "name": "citationsJson",
+              "value": "={{ JSON.stringify($(\"Build Grounded Context\").item.json.citations) }}",
               "type": "string"
             }
           ]
@@ -1224,9 +1441,27 @@
         "assignments": {
           "assignments": [
             {
-              "id": "output",
-              "name": "output",
-              "value": "={{ $(\"Shape Refusal Result\").item.json.replyText }}",
+              "id": "status",
+              "name": "status",
+              "value": "refused",
+              "type": "string"
+            },
+            {
+              "id": "confidence",
+              "name": "confidence",
+              "value": "={{ $(\"Build Grounded Context\").item.json.topScore }}",
+              "type": "number"
+            },
+            {
+              "id": "body",
+              "name": "body",
+              "value": "I don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
+              "type": "string"
+            },
+            {
+              "id": "citationsJson",
+              "name": "citationsJson",
+              "value": "[]",
               "type": "string"
             }
           ]
@@ -1294,8 +1529,10 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT json_build_object(\n  'summary', (\n    SELECT json_build_object(\n      'total', count(*),\n      'answered', count(*) FILTER (WHERE outcome = 'answered'),\n      'refused', count(*) FILTER (WHERE outcome = 'refused'),\n      'refusalRate', round((count(*) FILTER (WHERE outcome = 'refused'))::numeric / GREATEST(count(*), 1), 4),\n      'avgLatencyMs', round(avg(latency_ms)),\n      'p50LatencyMs', round(percentile_cont(0.5) WITHIN GROUP (ORDER BY latency_ms)),\n      'p95LatencyMs', round(percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms)),\n      'avgConfidence', round(avg(confidence_score)::numeric, 4)\n    )\n    FROM query_logs\n  ),\n  'daily', (\n    SELECT COALESCE(json_agg(d ORDER BY d.day), '[]'::json)\n    FROM (\n      SELECT\n        to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,\n        count(*) AS total,\n        count(*) FILTER (WHERE outcome = 'refused') AS refused\n      FROM query_logs\n      WHERE created_at > now() - interval '30 days'\n      GROUP BY 1\n    ) d\n  ),\n  'recent', (\n    SELECT COALESCE(json_agg(r), '[]'::json)\n    FROM (\n      SELECT created_at, question, outcome, confidence_score, latency_ms\n      FROM query_logs\n      ORDER BY created_at DESC\n      LIMIT 20\n    ) r\n  )\n) AS stats;",
-        "options": {}
+        "query": "SELECT json_build_object(\n  'summary', (\n    SELECT json_build_object(\n      'total', count(*),\n      'answered', count(*) FILTER (WHERE outcome = 'answered'),\n      'refused', count(*) FILTER (WHERE outcome = 'refused'),\n      'refusalRate', round((count(*) FILTER (WHERE outcome = 'refused'))::numeric / GREATEST(count(*), 1), 4),\n      'avgLatencyMs', round(avg(latency_ms)),\n      'p50LatencyMs', round(percentile_cont(0.5) WITHIN GROUP (ORDER BY latency_ms)),\n      'p95LatencyMs', round(percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms)),\n      'avgConfidence', round(avg(confidence_score)::numeric, 4),\n      'borderlineCount', count(*) FILTER (WHERE confidence_score >= 0.35 AND confidence_score <= 0.55)\n    )\n    FROM query_logs\n    WHERE $1::int IS NULL OR created_at > now() - ($1::text || ' days')::interval\n  ),\n  'daily', (\n    SELECT COALESCE(json_agg(d ORDER BY d.day), '[]'::json)\n    FROM (\n      SELECT\n        to_char(date_trunc('day', created_at), 'YYYY-MM-DD') AS day,\n        count(*) AS total,\n        count(*) FILTER (WHERE outcome = 'refused') AS refused\n      FROM query_logs\n      WHERE $1::int IS NULL OR created_at > now() - ($1::text || ' days')::interval\n      GROUP BY 1\n    ) d\n  ),\n  'recent', (\n    SELECT COALESCE(json_agg(r), '[]'::json)\n    FROM (\n      SELECT created_at, question, outcome, confidence_score, latency_ms\n      FROM query_logs\n      WHERE $1::int IS NULL OR created_at > now() - ($1::text || ' days')::interval\n      ORDER BY created_at DESC\n      LIMIT 20\n    ) r\n  )\n) AS stats;",
+        "options": {
+          "queryReplacement": "={{ [$('Dashboard Stats Webhook').item.json.query.days ? Number($('Dashboard Stats Webhook').item.json.query.days) : null] }}"
+        }
       },
       "id": "6196eb85-4cbf-4d5f-ad09-d13c0c876e1e",
       "name": "Query Stats (Neon)",
@@ -1356,9 +1593,27 @@
         "assignments": {
           "assignments": [
             {
-              "id": "output",
-              "name": "output",
-              "value": "={{ '⛔ Please sign in to use the chat assistant.' }}",
+              "id": "status",
+              "name": "status",
+              "value": "unauthorized",
+              "type": "string"
+            },
+            {
+              "id": "confidence",
+              "name": "confidence",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "body",
+              "name": "body",
+              "value": "⛔ Please sign in to use the chat assistant.",
+              "type": "string"
+            },
+            {
+              "id": "citationsJson",
+              "name": "citationsJson",
+              "value": "[]",
               "type": "string"
             }
           ]
@@ -1617,6 +1872,46 @@
       "main": [
         [
           {
+            "node": "Count Recent Signup Attempts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Recent Signup Attempts": {
+      "main": [
+        [
+          {
+            "node": "Too Many Signup Attempts?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Too Many Signup Attempts?": {
+      "main": [
+        [
+          {
+            "node": "Respond Rate Limited (Signup)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Signup Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Signup Attempt": {
+      "main": [
+        [
+          {
             "node": "Check Email Exists (Signup)",
             "type": "main",
             "index": 0
@@ -1712,6 +2007,46 @@
       "main": [
         [
           {
+            "node": "Count Recent Login Attempts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Recent Login Attempts": {
+      "main": [
+        [
+          {
+            "node": "Too Many Login Attempts?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Too Many Login Attempts?": {
+      "main": [
+        [
+          {
+            "node": "Respond Rate Limited (Login)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Login Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Login Attempt": {
+      "main": [
+        [
+          {
             "node": "Check User Exists (Login)",
             "type": "main",
             "index": 0
@@ -1760,6 +2095,17 @@
       ]
     },
     "Hash Submitted Password (Login)": {
+      "main": [
+        [
+          {
+            "node": "Constant-Time Compare (Login)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Constant-Time Compare (Login)": {
       "main": [
         [
           {
@@ -2267,6 +2613,9 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true
   }
 }
