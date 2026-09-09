@@ -1295,7 +1295,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://ba7fbdec-34b8-4cb4-af04-c756188603b1.us-east-2-0.aws.cloud.qdrant.io:6333/collections/company_knowledge_base/points/scroll",
+        "url": "https://bbb08b24-281d-4aa8-a3e2-d3f26d38d70b.us-east-2-0.aws.cloud.qdrant.io:6333/collections/company_knowledge_base/points/scroll",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
