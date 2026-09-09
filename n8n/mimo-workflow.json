@@ -1033,7 +1033,7 @@
     },
     {
       "parameters": {
-        "model": "llama-3.3-70b-versatile",
+        "model": "openai/gpt-oss-120b",
         "options": {
           "maxTokensToSample": 1024,
           "temperature": 0.2
