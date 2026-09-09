@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { apiFetch } from '../lib/apiFetch';
 
 const DASHBOARD_STATS_URL = import.meta.env.VITE_DASHBOARD_STATS_URL;
 
@@ -296,11 +297,7 @@ export default function DashboardPage() {
 
       try {
         const url = rangeDays ? `${DASHBOARD_STATS_URL}?days=${rangeDays}` : DASHBOARD_STATS_URL;
-        const response = await fetch(url, {
-          headers: user ? { Authorization: `Bearer ${user.token}` } : {},
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const stats: Stats = await response.json();
+        const stats = await apiFetch<Stats>(url, { token: user?.token });
         if (!cancelled) setState({ kind: 'loaded', stats });
       } catch (err) {
         if (!cancelled) {

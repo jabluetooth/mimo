@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, DragEvent, ChangeEvent } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { apiFetch, ApiError } from '../lib/apiFetch';
 
 const UPLOAD_WEBHOOK_URL = import.meta.env.VITE_UPLOAD_WEBHOOK_URL;
 const BINARY_FIELD_NAME = 'data'; // must match the ingestion webhook node's binaryPropertyName
@@ -115,44 +116,31 @@ export default function UploadPage() {
       formData.append(BINARY_FIELD_NAME, file, file.name);
       formData.append('visibility', visibility);
 
-      const response = await fetch(UPLOAD_WEBHOOK_URL, {
+      const payload = await apiFetch<{ message?: string }>(UPLOAD_WEBHOOK_URL, {
         method: 'POST',
-        headers: user ? { Authorization: `Bearer ${user.token}` } : {},
+        token: user?.token,
         body: formData,
       });
 
-      const contentType = response.headers.get('content-type') || '';
-      const payload = contentType.includes('application/json')
-        ? await response.json()
-        : { message: await response.text() };
-
       stopStepTimer();
       if (!mountedRef.current) return;
 
-      if (response.ok) {
-        setStepIndex(STEPS.length - 1);
-        setStatus({
-          kind: 'success',
-          message: payload?.message || 'Document ingested successfully.',
-        });
-        // Clear the selected file directly (not via pickFile, which also
-        // resets `status` back to idle — that would wipe out the success
-        // message and step list we just set, in the same tick).
-        setFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-      } else {
-        setStatus({
-          kind: 'error',
-          message: payload?.message || `Upload failed (HTTP ${response.status}).`,
-        });
-      }
+      setStepIndex(STEPS.length - 1);
+      setStatus({
+        kind: 'success',
+        message: payload?.message || 'Document ingested successfully.',
+      });
+      // Clear the selected file directly (not via pickFile, which also
+      // resets `status` back to idle — that would wipe out the success
+      // message and step list we just set, in the same tick).
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       stopStepTimer();
       if (!mountedRef.current) return;
-      setStatus({
-        kind: 'error',
-        message: `Could not reach the ingestion workflow: ${(err as Error).message}`,
-      });
+      const message =
+        err instanceof ApiError ? err.message : `Could not reach the ingestion workflow: ${(err as Error).message}`;
+      setStatus({ kind: 'error', message });
     }
   }
 

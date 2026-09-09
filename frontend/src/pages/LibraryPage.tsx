@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { apiFetch } from '../lib/apiFetch';
 
 const LIST_DOCUMENTS_URL = import.meta.env.VITE_LIST_DOCUMENTS_URL;
 
@@ -47,19 +48,7 @@ export default function LibraryPage() {
       }
 
       try {
-        const response = await fetch(LIST_DOCUMENTS_URL, {
-          headers: user ? { Authorization: `Bearer ${user.token}` } : {},
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const contentType = response.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-          throw new Error('Unexpected response from the list-documents workflow.');
-        }
-
-        const payload: ListResponse = await response.json();
+        const payload = await apiFetch<ListResponse>(LIST_DOCUMENTS_URL, { token: user?.token });
         if (!cancelled) {
           setState({ kind: 'loaded', documents: payload.documents ?? [] });
         }

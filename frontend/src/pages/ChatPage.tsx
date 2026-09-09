@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { apiFetch } from '../lib/apiFetch';
 
 const CHAT_WEBHOOK_URL = import.meta.env.VITE_CHAT_WEBHOOK_URL;
 const LIST_DOCUMENTS_URL = import.meta.env.VITE_LIST_DOCUMENTS_URL;
@@ -34,8 +35,8 @@ function suggestionsFromDocuments(documents: LibraryDoc[]): string[] {
 type Citation = { marker: string; source: string; section: string; updatedAt: string };
 
 type ParsedAnswer = {
-  status: 'grounded' | 'refused' | 'plain';
-  confidence?: number;
+  status: 'grounded' | 'refused' | 'unauthorized';
+  confidence: number;
   body: string;
   citations: Citation[];
 };
@@ -46,36 +47,30 @@ type Turn =
   | { role: 'assistant'; kind: 'answer'; parsed: ParsedAnswer }
   | { role: 'assistant'; kind: 'error'; text: string };
 
-// The workflow's reply is plain text with a light convention baked in by the
-// backend's own formatting step — a leading "✅ **Grounded answer** —
-// confidence NN%" or "⚠️ **Not found...**" line, then the answer body, then
-// an optional "Sources:\n[n] doc.md (Section, updated date)" block. Parsing
-// it client-side turns that into real UI (a status pill, structured source
-// chips) instead of just dumping raw markdown-ish text into a bubble.
-function parseAnswer(raw: string): ParsedAnswer {
-  const sourcesSplit = raw.split(/\n\nSources:\n/);
-  const main = sourcesSplit[0];
-  const citations: Citation[] = [];
+// The workflow replies with a structured JSON shape directly
+// ({status, confidence, body, citationsJson}) rather than a formatted
+// string the frontend has to regex-parse -- one seam, and a citation can't
+// silently fail to match a line pattern.
+type ChatReply = {
+  status: 'grounded' | 'refused' | 'unauthorized';
+  confidence: number;
+  body: string;
+  citationsJson: string;
+};
 
-  if (sourcesSplit[1]) {
-    const lineRe = /^\[(\d+)\]\s+(.+?)\s+\((.+?),\s*updated\s+(.+?)\)\s*$/gm;
-    let m: RegExpExecArray | null;
-    while ((m = lineRe.exec(sourcesSplit[1])) !== null) {
-      citations.push({ marker: `[${m[1]}]`, source: m[2], section: m[3], updatedAt: m[4] });
-    }
+function toParsedAnswer(data: ChatReply): ParsedAnswer {
+  let citations: Citation[] = [];
+  try {
+    citations = JSON.parse(data.citationsJson || '[]');
+  } catch {
+    citations = [];
   }
-
-  const groundedMatch = main.match(/^✅\s*\*\*Grounded answer\*\*\s*—\s*confidence\s*(\d+)%\s*\n\n([\s\S]*)$/);
-  if (groundedMatch) {
-    return { status: 'grounded', confidence: Number(groundedMatch[1]), body: groundedMatch[2].trim(), citations };
-  }
-
-  const refusedMatch = main.match(/^⚠️\s*\*\*[^*]+\*\*\s*\n\n([\s\S]*)$/);
-  if (refusedMatch) {
-    return { status: 'refused', body: refusedMatch[1].trim(), citations };
-  }
-
-  return { status: 'plain', body: main.trim(), citations };
+  return {
+    status: data.status,
+    confidence: Math.round((data.confidence ?? 0) * 100),
+    body: data.body ?? '',
+    citations,
+  };
 }
 
 // Minimal inline-markdown: **bold** and "- " bullet lines. The backend only
@@ -129,13 +124,16 @@ function renderInline(text: string) {
 }
 
 function AnswerTurn({ parsed }: { parsed: ParsedAnswer }) {
+  const pillLabel =
+    parsed.status === 'grounded'
+      ? `Grounded · ${parsed.confidence}% confidence`
+      : parsed.status === 'refused'
+        ? 'Not found in knowledge base'
+        : 'Sign-in required';
+
   return (
     <div className="turn-body">
-      {parsed.status !== 'plain' && (
-        <span className={`status-pill status-pill--${parsed.status}`}>
-          {parsed.status === 'grounded' ? `Grounded · ${parsed.confidence}% confidence` : 'Not found in knowledge base'}
-        </span>
-      )}
+      <span className={`status-pill status-pill--${parsed.status}`}>{pillLabel}</span>
       <div className="answer-text">{renderFormattedText(parsed.body)}</div>
       {parsed.citations.length > 0 && (
         <div className="sources-list" aria-label="Sources">
@@ -171,11 +169,7 @@ export default function ChatPage() {
         return;
       }
       try {
-        const response = await fetch(LIST_DOCUMENTS_URL, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const payload: { documents: LibraryDoc[] } = await response.json();
+        const payload = await apiFetch<{ documents: LibraryDoc[] }>(LIST_DOCUMENTS_URL, { token: user.token });
         const documents = payload.documents ?? [];
         if (!cancelled) setLibrary(documents.length === 0 ? { kind: 'empty' } : { kind: 'ready', documents });
       } catch {
@@ -217,7 +211,7 @@ export default function ChatPage() {
     setIsThinking(true);
 
     try {
-      const response = await fetch(CHAT_WEBHOOK_URL, {
+      const data = await apiFetch<ChatReply>(CHAT_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         // The Chat Trigger node doesn't reliably expose custom headers, but
@@ -226,10 +220,7 @@ export default function ChatPage() {
         // header (which is what Upload/Library/Dashboard use instead).
         body: JSON.stringify({ chatInput: question, sessionId, token: user?.token }),
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      const raw = typeof data.output === 'string' ? data.output : JSON.stringify(data);
-      setTurns((t) => [...t, { role: 'assistant', kind: 'answer', parsed: parseAnswer(raw) }]);
+      setTurns((t) => [...t, { role: 'assistant', kind: 'answer', parsed: toParsedAnswer(data) }]);
     } catch (err) {
       setTurns((t) => [
         ...t,
