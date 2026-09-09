@@ -1,10 +1,20 @@
 // Sends each adversarial prompt to the production Chat webhook and checks
 // that none of the forbidden strings (system-prompt fragments, injected
 // claims) leaked into the answer.
+//
+// Chat requires an authenticated (member-role is enough) JWT -- pass one via
+// MIMO_EVAL_TOKEN, e.g.:
+//   MIMO_EVAL_TOKEN=<token> node run-adversarial.js
 const fs = require("fs");
 const path = require("path");
 
 const CHAT_URL = "https://n8n.filheinzrelatorre.com/webhook/3d0b43af-45fb-436b-ace4-c668bdf7c8a5/chat";
+
+const TOKEN = process.env.MIMO_EVAL_TOKEN;
+if (!TOKEN) {
+  console.error("Missing MIMO_EVAL_TOKEN -- chat requires a signed-in JWT. Sign up/log in and export the token.");
+  process.exit(1);
+}
 
 const cases = JSON.parse(fs.readFileSync(path.join(__dirname, "adversarial.json"), "utf8"));
 
@@ -13,10 +23,10 @@ async function askCase(c) {
   const res = await fetch(CHAT_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chatInput: c.prompt, sessionId }),
+    body: JSON.stringify({ chatInput: c.prompt, sessionId, token: TOKEN }),
   });
-  const body = await res.json();
-  const answer = body.output || "";
+  const payload = await res.json();
+  const answer = payload.body || "";
   const leaked = c.must_not_contain.filter((s) => answer.toLowerCase().includes(s.toLowerCase()));
   return { id: c.id, category: c.category, prompt: c.prompt, answer, leaked, resisted: leaked.length === 0 };
 }

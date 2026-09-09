@@ -1,51 +1,23 @@
-// Runs the ground-truth question set against the production Chat webhook,
-// then cross-references each execution in n8n's Postgres history to check
-// whether the expected source doc was actually in the top reranked chunks
-// (Build Grounded Context node) — not just whether the final answer sounds
-// right.
+// Runs the ground-truth question set against the production Chat webhook.
+// Citations come straight from the structured JSON reply
+// (status/confidence/body/citationsJson), so this no longer needs to dig
+// through n8n's execution history via psql to find them.
+//
+// Chat requires an authenticated (member-role is enough) JWT -- pass one via
+// MIMO_EVAL_TOKEN, e.g.:
+//   MIMO_EVAL_TOKEN=<token> node run-baseline.js
 const fs = require("fs");
 const path = require("path");
-const { execFileSync } = require("child_process");
-const { parse } = require("flatted");
 
 const CHAT_URL = "https://n8n.filheinzrelatorre.com/webhook/3d0b43af-45fb-436b-ace4-c668bdf7c8a5/chat";
-const WORKFLOW_ID = "2NRRzQ65Z3wyJ4Lv";
+
+const TOKEN = process.env.MIMO_EVAL_TOKEN;
+if (!TOKEN) {
+  console.error("Missing MIMO_EVAL_TOKEN -- chat requires a signed-in JWT. Sign up/log in and export the token.");
+  process.exit(1);
+}
 
 const questions = JSON.parse(fs.readFileSync(path.join(__dirname, "questions.json"), "utf8"));
-
-// Uses execFileSync (argv array, no shell) so the query string's double
-// quotes around n8n's camelCase Postgres columns don't get mangled by
-// cmd.exe/sh quoting rules.
-function psql(query) {
-  const out = execFileSync(
-    "docker",
-    ["exec", "n8n-postgres", "psql", "-U", "n8n", "-d", "n8n", "-t", "-A", "-c", query],
-    { maxBuffer: 1024 * 1024 * 20 }
-  );
-  return out.toString();
-}
-
-function latestExecutionId() {
-  const out = psql(
-    `SELECT id FROM execution_entity WHERE "workflowId" = '${WORKFLOW_ID}' ORDER BY "startedAt" DESC LIMIT 1;`
-  );
-  return out.trim();
-}
-
-function fetchExecutionRunData(execId) {
-  const raw = psql(`SELECT data FROM execution_data WHERE "executionId" = ${execId};`);
-  const data = parse(raw);
-  return data.resultData.runData;
-}
-
-function extractCitations(runData) {
-  try {
-    const node = runData["Build Grounded Context"][0];
-    return node.data.main[0][0].json.citations || [];
-  } catch {
-    return [];
-  }
-}
 
 async function askQuestion(q) {
   const sessionId = `eval-${q.id}-${Date.now()}`;
@@ -53,25 +25,21 @@ async function askQuestion(q) {
   const res = await fetch(CHAT_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chatInput: q.question, sessionId }),
+    body: JSON.stringify({ chatInput: q.question, sessionId, token: TOKEN }),
   });
   const latencyMs = Date.now() - start;
-  const body = await res.json();
-  const answer = body.output || "";
-
-  await new Promise((r) => setTimeout(r, 400)); // let n8n finish writing execution_entity/data
+  const payload = await res.json();
+  const answer = payload.body || "";
 
   let citations = [];
   try {
-    const execId = latestExecutionId();
-    const runData = fetchExecutionRunData(execId);
-    citations = extractCitations(runData);
-  } catch (err) {
-    console.error(`  (warning: couldn't fetch execution data for ${q.id}: ${err.message})`);
+    citations = JSON.parse(payload.citationsJson || "[]");
+  } catch {
+    citations = [];
   }
 
   const retrievedSources = citations.map((c) => c.source);
-  const refused = /don't have information|not found in knowledge base/i.test(answer);
+  const refused = payload.status === "refused";
   const citationPresent = /\[\d+\]/.test(answer);
   const factsHit = q.expected_facts.filter((f) => answer.toLowerCase().includes(f.toLowerCase())).length;
 
