@@ -1,5 +1,6 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import gsap from 'gsap';
 import { useAuth } from '../auth/AuthContext';
 import { apiFetch } from '../lib/apiFetch';
 
@@ -8,6 +9,13 @@ const LIST_DOCUMENTS_URL = import.meta.env.VITE_LIST_DOCUMENTS_URL;
 
 const WELCOME =
   'Ask me anything covered by the internal knowledge base — I will cite my sources, or tell you plainly when I do not know.';
+
+// Shared glass-card shell, matching the treatment LandingPage's sample-answer
+// card already established (`border-[var(--glass-border-warm)]` +
+// `bg-white/70` + the CSS-variable backdrop blur/shadow tokens) so the chat
+// page and its landing-page preview read as the same surface.
+const CHAT_SHELL =
+  'flex w-full max-w-[700px] flex-col rounded-[24px] border border-[var(--glass-border-warm)] bg-white/70 shadow-[var(--shadow-glass)] [-webkit-backdrop-filter:var(--glass-blur)] [backdrop-filter:var(--glass-blur)]';
 
 type LibraryDoc = { source: string; sectionCount: number; chunkCount: number; updatedAt: string | null };
 
@@ -158,6 +166,7 @@ export default function ChatPage() {
   const [isThinking, setIsThinking] = useState(false);
   const [library, setLibrary] = useState<LibraryState>({ kind: 'checking' });
   const transcriptRef = useRef<HTMLDivElement>(null);
+  const prevTurnCount = useRef(turns.length);
   const sessionId = useMemo(() => crypto.randomUUID(), []);
 
   useEffect(() => {
@@ -188,6 +197,29 @@ export default function ChatPage() {
   useEffect(() => {
     transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: 'smooth' });
   }, [turns, isThinking]);
+
+  // A single restrained cue when a new turn (question or answer) lands, so
+  // the transcript doesn't just snap new content into place. Skipped for the
+  // initial welcome turn and entirely under prefers-reduced-motion — and
+  // kept independent from the auto-scroll effect above and the thinking
+  // ellipsis animation, which both keep working exactly as before.
+  // useLayoutEffect (not useEffect) so the from-state is applied before the
+  // browser paints the newly-appended turn — otherwise it would flash fully
+  // visible for a frame before GSAP hides and re-reveals it.
+  useLayoutEffect(() => {
+    const grew = turns.length > prevTurnCount.current;
+    prevTurnCount.current = turns.length;
+    if (!grew) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    const nodes = transcriptRef.current?.querySelectorAll<HTMLElement>('.turn');
+    const lastTurn = nodes && nodes[nodes.length - 1];
+    if (!lastTurn) return;
+
+    gsap.fromTo(lastTurn, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' });
+  }, [turns]);
 
   async function sendQuestion(question: string) {
     if (!question || isThinking) return;
@@ -238,12 +270,12 @@ export default function ChatPage() {
 
   if (library.kind === 'empty') {
     return (
-      <div className="chat-shell chat-shell--empty">
+      <div className={`${CHAT_SHELL} items-center justify-center overflow-hidden p-8 h-[min(680px,78vh)]`}>
         <h1 className="visually-hidden">Chat with the knowledge assistant</h1>
-        <div className="chat-empty-state">
-          <p className="chat-empty-eyebrow">Nothing to chat about yet</p>
-          <h2>Your knowledge base is empty</h2>
-          <p className="chat-empty-body">
+        <div className="flex max-w-[40ch] flex-col items-center text-center">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.1em] text-accent">Nothing to chat about yet</p>
+          <h2 className="mb-3 text-[26px]">Your knowledge base is empty</h2>
+          <p className="mb-6 text-sm leading-[1.6] text-muted">
             Mimo answers questions from documents that have been uploaded — there aren't any yet, so there's
             nothing to ground an answer in. Upload one first, then come back here to ask about it.
           </p>
@@ -256,26 +288,31 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="chat-shell">
+    <div className={`${CHAT_SHELL} h-[min(680px,78vh)] overflow-hidden`}>
       <h1 className="visually-hidden">Chat with the knowledge assistant</h1>
 
-      <div className="chat-transcript" ref={transcriptRef}>
+      <div className="flex flex-1 flex-col gap-[22px] overflow-y-auto px-8 py-7" ref={transcriptRef}>
         {turns.map((turn, i) => (
           <div className="turn" key={i}>
             <span className="turn-label">{turn.role === 'user' ? 'You' : 'Mimo'}</span>
             {turn.role === 'user' && <p className="turn-body turn-body--question">{turn.text}</p>}
             {turn.role === 'assistant' && turn.kind === 'welcome' && <p className="turn-body">{turn.text}</p>}
             {turn.role === 'assistant' && turn.kind === 'error' && (
-              <p className="turn-body turn-body--error">{turn.text}</p>
+              <p className="turn-body text-error">{turn.text}</p>
             )}
             {turn.role === 'assistant' && turn.kind === 'answer' && <AnswerTurn parsed={turn.parsed} />}
           </div>
         ))}
 
         {turns.length === 1 && !isThinking && suggestions.length > 0 && (
-          <div className="suggestion-chips">
+          <div className="-mt-1.5 flex flex-col items-start gap-2">
             {suggestions.map((s) => (
-              <button key={s} type="button" className="suggestion-chip" onClick={() => sendQuestion(s)}>
+              <button
+                key={s}
+                type="button"
+                className="cursor-pointer rounded-full border border-[var(--glass-border-warm)] bg-white/50 px-3.5 py-2 text-left font-body text-[13px] text-text transition-[background-color,border-color,transform] duration-150 hover:-translate-y-px hover:border-accent hover:bg-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+                onClick={() => sendQuestion(s)}
+              >
                 {s}
               </button>
             ))}
@@ -285,12 +322,15 @@ export default function ChatPage() {
         {isThinking && (
           <div className="turn" aria-live="polite">
             <span className="turn-label">Mimo</span>
-            <p className="turn-body chat-thinking">Thinking</p>
+            <p className="turn-body chat-thinking italic text-muted">Thinking</p>
           </div>
         )}
       </div>
 
-      <form className="chat-input-bar" onSubmit={handleSubmit}>
+      <form
+        className="m-4 flex shrink-0 items-center gap-2.5 rounded-full border border-[var(--glass-border-warm)] bg-white/[0.86] py-1.5 pl-[18px] pr-1.5 shadow-[var(--shadow-sm)] transition-colors duration-150 [-webkit-backdrop-filter:var(--glass-blur-sm)] [backdrop-filter:var(--glass-blur-sm)] focus-within:border-accent"
+        onSubmit={handleSubmit}
+      >
         <input
           type="text"
           value={input}
@@ -299,8 +339,14 @@ export default function ChatPage() {
           autoComplete="off"
           aria-label="Ask a question"
           disabled={isThinking}
+          className="min-w-0 flex-1 border-0 bg-transparent font-body text-sm text-text outline-none [caret-color:var(--accent-raw)] placeholder:text-muted focus:outline-none focus:placeholder:opacity-0"
         />
-        <button type="submit" className="chat-send-btn" disabled={isThinking || !input.trim()} aria-label="Send">
+        <button
+          type="submit"
+          className="grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-full border-0 bg-accent text-white transition-[background-color,transform,opacity] duration-150 hover:enabled:-translate-y-px hover:enabled:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+          disabled={isThinking || !input.trim()}
+          aria-label="Send"
+        >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

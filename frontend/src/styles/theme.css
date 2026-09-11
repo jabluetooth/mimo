@@ -1176,6 +1176,14 @@ code {
   color: var(--accent-2);
 }
 
+/* Signed-out visitors hitting a real backend 401 (distinct from a genuine
+   "not found in the knowledge base" refusal) — neutral muted tone rather
+   than the success/info colors used by the other two outcomes. */
+.status-pill--unauthorized {
+  background: rgba(110, 93, 83, 0.14);
+  color: var(--muted);
+}
+
 .sources-list {
   display: flex;
   flex-wrap: wrap;
