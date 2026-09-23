@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+:root {
+  /* Paper & Vermilion — the same system as Relay and Insight (one accent,
+     hairlines instead of shadows, data in mono), with Mimo's own identity.
+     Mimo is an internal-docs tool a whole company uses, so light is the
+     designed identity here and dark is the functional fallback. The
+     vermilion is kept from Mimo's original brand, darkened enough to carry
+     white text. */
+  --background: #f6f1ea;
+  --surface: #fffdf9;
+  --foreground: #1d1712;
+  --muted: #6e6258;
+  --border: #1d17121c;
+
+  --accent: #c73a1c;
+  --accent-foreground: #fffdf9;
+
+  /* Grounded / borderline / errors. A refusal isn't an error in Mimo — it is
+     the product working — so it's drawn in ink with an icon, not in red. */
+  --success: #2f7d4f;
+  --warning: #9a5b00;
+  --danger: #b42318;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #15110e;
+    --surface: #1d1814;
+    --foreground: #f3ece4;
+    --muted: #9c8f84;
+    --border: #f3ece41a;
+    --accent: #f0714f;
+    --accent-foreground: #15110e;
+    --success: #5fbf85;
+    --warning: #e0a93a;
+    --danger: #f07167;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
+}
+
+/* The default hairline colour lives in the base layer so border-accent and
+   friends can still override it. */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Paper grain for the public site: SVG feTurbulence at low opacity, fixed and
+   pointer-events:none, so it costs no layout. */
+.site-noise {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+@media (prefers-color-scheme: dark) {
+  .site-noise {
+    filter: invert(1);
+  }
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

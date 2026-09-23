@@ -14,11 +14,11 @@ Employees waste time re-asking questions that are already answered in company do
 
 <p align="center"><img src="docs/demo.gif" alt="Mimo demo" width="800"></p>
 
-**Live demo:** [mimoby.filheinzrelatorre.com](https://mimoby.filheinzrelatorre.com) - [chat](https://mimoby.filheinzrelatorre.com/chat) · [upload](https://mimoby.filheinzrelatorre.com/upload) · [library](https://mimoby.filheinzrelatorre.com/library) · [dashboard](https://mimoby.filheinzrelatorre.com/dashboard) (sign up for a free account to try it)
+**Live demo:** [mimoby.filheinzrelatorre.com](https://mimoby.filheinzrelatorre.com) - [how it works](https://mimoby.filheinzrelatorre.com/how-it-works) · [security](https://mimoby.filheinzrelatorre.com/security) · [run your own](https://mimoby.filheinzrelatorre.com/run-your-own) · [chat](https://mimoby.filheinzrelatorre.com/chat) · [upload](https://mimoby.filheinzrelatorre.com/upload) · [library](https://mimoby.filheinzrelatorre.com/library) · [dashboard](https://mimoby.filheinzrelatorre.com/dashboard) (sign up for a free account to try it)
 
 ## Highlights
 
-- **Grounded RAG pipeline** - vector retrieval → cross-encoder reranking → confidence-gated generation, with per-claim `[n]` citations and an explicit refusal path instead of hallucinated answers on low-confidence retrieval.
+- **Grounded RAG pipeline** - vector retrieval (8 candidates) → re-scoring against the question → role filter → confidence-gated generation over the top 4, with per-claim `[n]` citations and an explicit refusal path instead of hallucinated answers on low-confidence retrieval.
 - **Measured prompt-injection resistance** - retrieved content is treated as untrusted data in the system prompt design, verified with a 12-case adversarial test suite (direct jailbreaks, indirect injection via a planted payload, obfuscated extraction, meta-manipulation).
 - **Real authentication and role-based access control** - custom email/password auth issuing signed JWTs (no third-party auth vendor), with retrieval-level enforcement: documents marked admin-only are filtered out of a regular user's results server-side, not just hidden in the UI.
 - **Eval-driven, not vibes-driven** - a 30-question ground-truth set plus the adversarial suite run against the live production system, with a documented ablation (confidence threshold 0.5 → 0.45) showing a measured before/after tradeoff, not a guess.
@@ -33,6 +33,7 @@ Measured against the live production system (not a local mock):
 | Retrieval accuracy (expected document in top-4 reranked chunks) | **100%** (25/25) |
 | Prompt-injection resistance (adversarial suite) | **100%** (12/12) |
 | False-refusal rate, after a diagnosed threshold fix | 12% → **8%** |
+| Correct-refusal rate, the cost of that fix | 100% → **80%** (one should-refuse question now answered at 0.47) |
 | Citation present in answer | 88% → **92%** |
 | Expected-fact keyword coverage | 78% → **84%** |
 
@@ -66,11 +67,11 @@ Auth, chat, upload, library, and the dashboard endpoint all run as one orchestra
 | Layer | Implementation |
 |---|---|
 | Orchestration | n8n (self-hosted, Docker) |
-| LLM | Groq (Llama 3.3 70B) |
-| Embeddings | Hugging Face Inference API (`BAAI/bge-small-en-v1.5`) |
+| LLM | Groq (`openai/gpt-oss-120b`, temperature 0.2) |
+| Embeddings | Hugging Face Inference API (`sentence-transformers/all-mpnet-base-v2`) |
 | Vector DB | Qdrant (self-hosted, Docker) |
-| Reranker | HuggingFace cross-encoder reranking |
-| Frontend | Vite/React - landing, chat, upload, library, dashboard, login, signup |
+| Re-scoring | Hugging Face sentence similarity (`all-mpnet-base-v2`) between the question and each candidate |
+| Frontend | Vite/React, Tailwind CSS v4, Framer Motion - landing, how it works, security, run your own, chat, upload, library, dashboard, login, signup |
 | Logging | Postgres (Neon) - `query_logs` table backing the dashboard |
 | Alerting | Slack, fired on low-confidence refusal |
 | Auth / RBAC | Salted HMAC-SHA256 password hashing + server pepper, HS256 JWTs, `admin`/`member` roles enforced at the retrieval layer |
@@ -103,11 +104,13 @@ node query.js
 ## Known limitations
 
 - Password hashing is salted HMAC-SHA256 with a server-side pepper rather than bcrypt/scrypt/argon2 - deliberately scoped for this project's size, not intended for a large production user base as-is.
-- No password reset flow, no email verification, no login rate-limiting yet.
+- No password reset flow and no email verification yet. (Sign-in is rate-limited: 10 attempts per email per 15 minutes, 5 sign-ups per email per hour.)
 - Ingestion is a manual upload rather than a scheduled sync from an external source (e.g. Google Drive).
 - Retrieval is vector-only; hybrid vector + keyword search is a natural next step.
 
 ## Changelog
+
+- **2026-09-23** - Rebuilt the website on the same design system as [Relay](https://github.com/jabluetooth/relay) and [Insight](https://github.com/jabluetooth/insight): Tailwind v4 tokens, Framer Motion (masked line reveals, a scroll-driven pipeline, section navigation), Lucide icons, Geist type, in Mimo's own paper-and-vermilion palette with a dark fallback. New How it works, Security and Run your own pages; the home page replays real answers from the eval run, plots the eval's real confidence scores against the gate, and demonstrates the role filter. The app pages (chat, library, upload, dashboard) share one app bar with role-aware navigation; their behaviour is unchanged. GSAP and the 1,400-line stylesheet are gone. This README's architecture table was also corrected to match `n8n/mimo-workflow.json` (embedding model, re-scoring method, LLM, and the sign-in rate limit that already exists).
 
 - **2026-07-29** - The signup/login password-hashing nodes (`Hash Password (Signup)`, `Hash Submitted Password (Login)`) previously ran HMAC with no key configured, which silently drops the security benefit of using HMAC at all. Both nodes are now bound to a dedicated n8n `crypto` credential holding the server-side pepper, so signup and login use the identical keyed hash. **Note:** if any accounts were registered before this fix, their stored password hash was computed unkeyed and will no longer match on login - those accounts need a password reset.
 
