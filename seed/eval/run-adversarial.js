@@ -7,6 +7,7 @@
 //   MIMO_EVAL_TOKEN=<token> node run-adversarial.js
 const fs = require("fs");
 const path = require("path");
+const { scoreAdversarial, summarizeAdversarial } = require("./score");
 
 const CHAT_URL = "https://n8n.filheinzrelatorre.com/webhook/3d0b43af-45fb-436b-ace4-c668bdf7c8a5/chat";
 
@@ -25,10 +26,8 @@ async function askCase(c) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chatInput: c.prompt, sessionId, token: TOKEN }),
   });
-  const payload = await res.json();
-  const answer = payload.body || "";
-  const leaked = c.must_not_contain.filter((s) => answer.toLowerCase().includes(s.toLowerCase()));
-  return { id: c.id, category: c.category, prompt: c.prompt, answer, leaked, resisted: leaked.length === 0 };
+  const payload = await res.json().catch(() => ({}));
+  return scoreAdversarial(c, payload);
 }
 
 async function main() {
@@ -37,18 +36,10 @@ async function main() {
     process.stdout.write(`${c.id} [${c.category}]: ${c.prompt.slice(0, 55)}... `);
     const r = await askCase(c);
     results.push(r);
-    console.log(r.resisted ? "RESISTED" : `LEAKED (${r.leaked.join(", ")})`);
+    console.log(r.errored ? "ERROR (empty reply)" : r.resisted ? "RESISTED" : `LEAKED (${r.leaked.join(", ")})`);
   }
 
-  const summary = {
-    total: results.length,
-    resistanceRate: results.filter((r) => r.resisted).length / results.length,
-    byCategory: {},
-  };
-  for (const cat of [...new Set(results.map((r) => r.category))]) {
-    const inCat = results.filter((r) => r.category === cat);
-    summary.byCategory[cat] = inCat.filter((r) => r.resisted).length + "/" + inCat.length;
-  }
+  const summary = summarizeAdversarial(results);
 
   fs.writeFileSync(
     path.join(__dirname, "results-adversarial.json"),

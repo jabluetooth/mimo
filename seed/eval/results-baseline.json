@@ -1,20 +1,22 @@
 {
   "summary": {
     "total": 30,
-    "retrievalAccuracy": 1,
+    "retrievalAccuracy": 0.92,
     "citationRate": 0.92,
-    "factsCoverage": 0.84,
+    "factsCoverage": 0.86,
     "refusalCorrectness": 0.8,
     "falseRefusalRate": 0.08,
-    "avgLatencyMs": 3619,
-    "p95LatencyMs": 4957
+    "errorRate": 0,
+    "avgLatencyMs": 5884,
+    "p95LatencyMs": 11474
   },
   "results": [
     {
       "id": "q01",
       "question": "What's our refund policy for enterprise clients?",
-      "answer": "✅ **Grounded answer** — confidence 75%\n\nThe refund policy for enterprise clients is governed by the terms in their Master Service Agreement (MSA) [1]. However, in the absence of MSA-specific terms, the default enterprise refund rule applies [2]: \n- Full refund if cancellation is requested before the engagement kickoff date.\n- 50% refund of unearned fees if cancellation occurs within the first 30 days of the engagement.\n- No refund after 30 days into the engagement; remaining contract value converts to a service credit.\n\nThere is a conflicting statement in [3] that suggests a full refund within 30 days of the invoice date for enterprise clients, which contradicts the information in [2]. Therefore, the exact refund policy for enterprise clients is unclear due to conflicting information [2, 3].\n\nSources:\n[1] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[2] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[3] test-doc.txt (Uploaded Document, updated 2026-07-23)\n[4] support-tickets.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 4957,
+      "answer": "Our enterprise‑client refund rules are :\n\n* **Governing agreement** – Enterprise refunds are first governed by the terms in the client’s Master Service Agreement (MSA). If the MSA does not specify a refund, the default policy applies [1].\n\n* **Default refund schedule**  \n  * **Before kickoff** – Full refund if the client cancels before the engagement kickoff date.  \n  * **Within the first 30 days** – 50 % of the unearned fees are refunded, prorated against any hours already delivered.  \n  * **After 30 days** – No cash refund; the remaining contract value is converted into a service credit that is valid for 12 months [2].\n\n* **Approval process** – Every enterprise refund request must be approved jointly by the Finance team lead and the client’s assigned Account Manager before it can be processed [2].\n\n* **Processing time** – Approved requests are typically resolved within 5 business days [2].\n\n* **Non‑refundable items** – Setup fees, any custom integration work already delivered, and third‑party licensing costs passed through to the client are never refundable, regardless of client tier [2].\n\nThese points together constitute the current refund policy for enterprise clients.",
+      "latencyMs": 8274,
+      "outcome": "answered",
       "should_refuse": false,
       "refused": false,
       "correctRefusalBehavior": true,
@@ -22,39 +24,43 @@
       "retrievedSources": [
         "refund-policy.md",
         "refund-policy.md",
-        "test-doc.txt",
+        "support-tickets.md",
         "support-tickets.md"
       ],
       "retrievalHit": true,
       "citationPresent": true,
       "factsHit": 2,
-      "factsTotal": 2
+      "factsTotal": 2,
+      "rawStatus": "grounded"
     },
     {
       "id": "q02",
       "question": "How long do standard clients have to request a refund?",
-      "answer": "✅ **Grounded answer** — confidence 69%\n\nAccording to [3], standard clients have 14 days to request a full refund, provided fewer than 10% of contracted service hours have been delivered. After this 14-day window, refunds are issued as prorated credit toward future invoices, not cash refunds.\n\nSources:\n[1] test-doc.txt (Uploaded Document, updated 2026-07-23)\n[2] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[3] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[4] support-tickets.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3387,
+      "answer": "Standard (self‑serve) clients must request a refund within **14 days of purchase** to receive a full cash refund, provided that fewer than 10 % of the contracted service hours have been delivered【2】.",
+      "latencyMs": 3833,
+      "outcome": "answered",
       "should_refuse": false,
       "refused": false,
       "correctRefusalBehavior": true,
       "expected_source": "refund-policy.md",
       "retrievedSources": [
-        "test-doc.txt",
         "refund-policy.md",
         "refund-policy.md",
-        "support-tickets.md"
+        "support-tickets.md",
+        "pto-policy.md"
       ],
       "retrievalHit": true,
       "citationPresent": true,
       "factsHit": 1,
-      "factsTotal": 1
+      "factsTotal": 1,
+      "rawStatus": "grounded"
     },
     {
       "id": "q03",
       "question": "Are setup fees refundable?",
-      "answer": "✅ **Grounded answer** — confidence 51%\n\nAccording to [1], setup fees are non-refundable under any tier. This is explicitly stated in the \"Non-Refundable Items\" section. There is no conflicting information in the other context chunks regarding setup fees being refundable. Therefore, setup fees are not refundable, as stated in [1].\n\nSources:\n[1] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[2] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[3] test-doc.txt (Uploaded Document, updated 2026-07-23)\n[4] vendor-contract-changes.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3246,
+      "answer": "No. Setup fees are listed as a non‑refundable item— they are not returned under any tier [1].",
+      "latencyMs": 3884,
+      "outcome": "answered",
       "should_refuse": false,
       "refused": false,
       "correctRefusalBehavior": true,
@@ -62,19 +68,21 @@
       "retrievedSources": [
         "refund-policy.md",
         "refund-policy.md",
-        "test-doc.txt",
+        "vendor-contract-changes.md",
         "vendor-contract-changes.md"
       ],
       "retrievalHit": true,
       "citationPresent": true,
       "factsHit": 1,
-      "factsTotal": 1
+      "factsTotal": 1,
+      "rawStatus": "grounded"
     },
     {
       "id": "q04",
       "question": "How do I request a refund as a client?",
-      "answer": "✅ **Grounded answer** — confidence 64%\n\nTo request a refund as a client, you can submit your request through the billing portal or by emailing billing@company.com [1]. If you are an enterprise client, it is also recommended to notify your Account Manager directly to avoid delays [1]. However, the specific refund terms and conditions may vary depending on your client type and agreement, with different policies applying to standard and enterprise clients [1, 2]. Additionally, enterprise clients may be governed by the terms in their Master Service Agreement (MSA) [2], or a default rule [2] and possibly another policy [3], which may conflict with each other.\n\nSources:\n[1] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[2] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[3] test-doc.txt (Uploaded Document, updated 2026-07-23)\n[4] support-tickets.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3831,
+      "answer": "To request a refund you should:\n\n1. **Submit the request through the billing portal** or **email billing@company.com** ([1]).  \n2. **If you are an enterprise client**, also **inform your Account Manager directly** so the request isn’t delayed in the general billing queue ([1]).\n\nAfter you submit the request, the refund will be reviewed and must be **approved jointly by the Finance team lead and your assigned Account Manager** for enterprise accounts; the typical processing time is **within 5 business days** ([1]).",
+      "latencyMs": 4083,
+      "outcome": "answered",
       "should_refuse": false,
       "refused": false,
       "correctRefusalBehavior": true,
@@ -82,19 +90,21 @@
       "retrievedSources": [
         "refund-policy.md",
         "refund-policy.md",
-        "test-doc.txt",
+        "support-tickets.md",
         "support-tickets.md"
       ],
       "retrievalHit": true,
       "citationPresent": true,
       "factsHit": 1,
-      "factsTotal": 1
+      "factsTotal": 1,
+      "rawStatus": "grounded"
     },
     {
       "id": "q05",
       "question": "Who needs to approve an enterprise refund request?",
-      "answer": "✅ **Grounded answer** — confidence 65%\n\nAccording to [3], all enterprise refund requests must be approved by the Finance team lead and the assigned Account Manager jointly before processing. However, [4] seems to provide conflicting information about the refund policy for enterprise clients, but it does not mention the approval process. Therefore, based on [3], both the Finance team lead and the assigned Account Manager need to approve an enterprise refund request.\n\nSources:\n[1] support-tickets.md (Uploaded Document, updated 2026-07-23)\n[2] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[3] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[4] test-doc.txt (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3431,
+      "answer": "Enterprise refund requests require **joint approval from the Finance team lead and the client’s assigned Account Manager** before the refund can be processed【2†L5-L7】. This sign‑off step is confirmed in the ticket example, where the missing Account Manager approval caused a delay【1†L3-L6】.",
+      "latencyMs": 3978,
+      "outcome": "answered",
       "should_refuse": false,
       "refused": false,
       "correctRefusalBehavior": true,
@@ -103,18 +113,20 @@
         "support-tickets.md",
         "refund-policy.md",
         "refund-policy.md",
-        "test-doc.txt"
+        "support-tickets.md"
       ],
       "retrievalHit": true,
       "citationPresent": true,
       "factsHit": 2,
-      "factsTotal": 2
+      "factsTotal": 2,
+      "rawStatus": "grounded"
     },
     {
       "id": "q06",
       "question": "How much PTO do full-time employees accrue per month?",
-      "answer": "✅ **Grounded answer** — confidence 71%\n\nAccording to [1], full-time employees accrue 1.75 days of PTO per month. There is no conflicting information in the other context chunks regarding the accrual rate.\n\nSources:\n[1] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[2] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[3] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[4] real-test.txt (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3254,
+      "answer": "Full‑time employees accrue **1.75 days of PTO each month** (which totals about 21 days per year)【1】.",
+      "latencyMs": 3633,
+      "outcome": "answered",
       "should_refuse": false,
       "refused": false,
       "correctRefusalBehavior": true,
@@ -122,39 +134,21 @@
       "retrievedSources": [
         "pto-policy.md",
         "pto-policy.md",
-        "pto-policy.md",
-        "real-test.txt"
+        "security-access-policy.md",
+        "refund-policy.md"
       ],
       "retrievalHit": true,
       "citationPresent": true,
       "factsHit": 1,
-      "factsTotal": 1
+      "factsTotal": 1,
+      "rawStatus": "grounded"
     },
     {
       "id": "q07",
       "question": "What's the process for requesting time off during a client engagement?",
-      "answer": "✅ **Grounded answer** — confidence 76%\n\nThe process for requesting time off during a client engagement is outlined in [1] and partially in [4]. According to [1], the request must be submitted at least 10 business days in advance, co-approved by the direct manager and engagement/project lead, and may require a coverage plan for absences longer than 2 consecutive business days. However, [2] seems to conflict with [1] by stating that employees may request time off with only two weeks' notice during client engagements, which is not entirely consistent with the 10 business days' notice specified in [1]. Therefore, the exact process may be unclear due to these conflicting sources.\n\nSources:\n[1] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[2] real-test.txt (Uploaded Document, updated 2026-07-23)\n[3] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[4] pto-policy.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3511,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "pto-policy.md",
-      "retrievedSources": [
-        "pto-policy.md",
-        "real-test.txt",
-        "pto-policy.md",
-        "pto-policy.md"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 1,
-      "factsTotal": 1
-    },
-    {
-      "id": "q08",
-      "question": "Who has to approve a PTO request during an active client engagement?",
-      "answer": "✅ **Grounded answer** — confidence 66%\n\nAccording to [1], a PTO request during an active client engagement must be co-approved by both the employee's direct manager and the engagement/project lead for the client account.\n\nSources:\n[1] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[2] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[3] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[4] real-test.txt (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3313,
+      "answer": "During an active, billable client engagement the PTO request follows a tighter workflow than regular time‑off:\n\n1. **Advance notice** – Submit the request **at least 10 business days before the desired day(s)** so the engagement lead can plan coverage [2].  \n2. **Dual approval** – The request must be **co‑approved by your direct manager *and* the engagement/project lead** for that client account [2].  \n3. **Coverage plan for longer absences** – If you’ll be away **more than 2 consecutive business days**, the engagement lead must first confirm a coverage plan (a backup team member or a client‑communicated timeline adjustment) before the request is finalized [2].\n\n**Exceptions**\n\n* Requests with **less than 10 business days’ notice** can still be considered, but approval is at the engagement lead’s discretion and is not guaranteed [1].  \n* For **emergency or unplanned absences** (illness, family emergency), no advance notice is required; you should notify your manager and the engagement lead as soon as possible, and the lead will arrange same‑day coverage if the work is client‑facing [1].\n\nThese steps ensure the client engagement remains covered while respecting the employee’s PTO rights.",
+      "latencyMs": 4586,
+      "outcome": "answered",
       "should_refuse": false,
       "refused": false,
       "correctRefusalBehavior": true,
@@ -162,299 +156,285 @@
       "retrievedSources": [
         "pto-policy.md",
         "pto-policy.md",
-        "pto-policy.md",
-        "real-test.txt"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 2,
-      "factsTotal": 2
-    },
-    {
-      "id": "q09",
-      "question": "Do I need advance notice for an emergency absence during a client engagement?",
-      "answer": "✅ **Grounded answer** — confidence 68%\n\nAccording to [1], for an emergency absence during a client engagement, you do not need advance notice, but you should notify your manager and engagement lead as soon as reasonably possible. However, [2] and [3] provide conflicting information regarding advance notice for time off requests during client engagements, with [2] requiring at least 10 business days' notice and [3] requiring two weeks' notice. [4] is unrelated to the question. Therefore, the context chunks partially conflict with each other, and it is unclear which policy applies to emergency absences specifically.\n\nSources:\n[1] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[2] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[3] real-test.txt (Uploaded Document, updated 2026-07-23)\n[4] refund-policy.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3171,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "pto-policy.md",
-      "retrievedSources": [
-        "pto-policy.md",
-        "pto-policy.md",
-        "real-test.txt",
-        "refund-policy.md"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 0,
-      "factsTotal": 1
-    },
-    {
-      "id": "q10",
-      "question": "How many unused PTO days roll over to the next year?",
-      "answer": "✅ **Grounded answer** — confidence 68%\n\nAccording to [2], up to 5 unused PTO days roll over into the next calendar year. Note that [1], [3], and [4] do not provide information on PTO rollover, and [4] appears to be a separate, unrelated policy document. Only [2] explicitly addresses the question of PTO rollover.\n\nSources:\n[1] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[2] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[3] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[4] real-test.txt (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 4696,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "pto-policy.md",
-      "retrievedSources": [
-        "pto-policy.md",
-        "pto-policy.md",
-        "pto-policy.md",
-        "real-test.txt"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 1,
-      "factsTotal": 1
-    },
-    {
-      "id": "q11",
-      "question": "Summarize what changed in the vendor contract from Q1 to Q2.",
-      "answer": "✅ **Grounded answer** — confidence 52%\n\nAccording to [1], the vendor contract changes from Q1 to Q2 include: \n1. Pricing changes with tiered pricing introduced ($0.021/GB-month for the first 50TB, $0.017/GB-month beyond) [1], \n2. Reduced egress fees from $0.09/GB to $0.07/GB [1], \n3. SLA changes with a higher uptime guarantee (99.95%) and a service-credit penalty for breaches [1], \n4. Addition of a data retention and deletion policy requiring data deletion within 30 days of a formal request [2], and \n5. Upgrade to Priority support with a 4-hour response time for critical issues at an added fee of $1,200/month [1]. \n\nThese changes are projected to result in roughly 9% lower costs in Q2 compared to Q1 [1].\n\nSources:\n[1] vendor-contract-changes.md (Uploaded Document, updated 2026-07-23)\n[2] vendor-contract-changes.md (Uploaded Document, updated 2026-07-23)\n[3] vendor-onboarding-notes.md (Uploaded Document, updated 2026-07-23)\n[4] refund-policy.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3716,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "vendor-contract-changes.md",
-      "retrievedSources": [
-        "vendor-contract-changes.md",
-        "vendor-contract-changes.md",
-        "vendor-onboarding-notes.md",
-        "refund-policy.md"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 2,
-      "factsTotal": 2
-    },
-    {
-      "id": "q12",
-      "question": "What is the new uptime SLA guarantee for CloudStore in Q2?",
-      "answer": "✅ **Grounded answer** — confidence 71%\n\nThe new uptime SLA guarantee for CloudStore in Q2 is 99.95% uptime, as stated in [2]. This is an increase from the Q1 guarantee of 99.9% uptime, also mentioned in [2]. Additionally, Q2 terms include a service-credit penalty for downtime beyond the SLA threshold, as described in [2].\n\nSources:\n[1] vendor-contract-changes.md (Uploaded Document, updated 2026-07-23)\n[2] vendor-contract-changes.md (Uploaded Document, updated 2026-07-23)\n[3] vendor-onboarding-notes.md (Uploaded Document, updated 2026-07-23)\n[4] vendor-onboarding-notes.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3932,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "vendor-contract-changes.md",
-      "retrievedSources": [
-        "vendor-contract-changes.md",
-        "vendor-contract-changes.md",
-        "vendor-onboarding-notes.md",
-        "vendor-onboarding-notes.md"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 1,
-      "factsTotal": 1
-    },
-    {
-      "id": "q13",
-      "question": "How much does Priority support cost per month for CloudStore?",
-      "answer": "✅ **Grounded answer** — confidence 65%\n\nThe cost of Priority support for CloudStore is $1,200/month, as stated in [1]. This is an added flat fee for upgrading from Standard support to Priority support, which offers a 4-hour response for critical issues.\n\nSources:\n[1] vendor-contract-changes.md (Uploaded Document, updated 2026-07-23)\n[2] vendor-contract-changes.md (Uploaded Document, updated 2026-07-23)\n[3] vendor-onboarding-notes.md (Uploaded Document, updated 2026-07-23)\n[4] vendor-onboarding-notes.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3256,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "vendor-contract-changes.md",
-      "retrievedSources": [
-        "vendor-contract-changes.md",
-        "vendor-contract-changes.md",
-        "vendor-onboarding-notes.md",
-        "vendor-onboarding-notes.md"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 1,
-      "factsTotal": 1
-    },
-    {
-      "id": "q14",
-      "question": "What data deletion guarantee did CloudStore add in Q2?",
-      "answer": "✅ **Grounded answer** — confidence 82%\n\nAccording to [1], CloudStore added a data deletion guarantee in Q2, requiring them to permanently delete data within 30 days of a formal deletion request, with a signed certificate of destruction available on request. This change was made to satisfy updated compliance requirements.\n\nSources:\n[1] vendor-contract-changes.md (Uploaded Document, updated 2026-07-23)\n[2] vendor-contract-changes.md (Uploaded Document, updated 2026-07-23)\n[3] vendor-onboarding-notes.md (Uploaded Document, updated 2026-07-23)\n[4] vendor-onboarding-notes.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3658,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "vendor-contract-changes.md",
-      "retrievedSources": [
-        "vendor-contract-changes.md",
-        "vendor-contract-changes.md",
-        "vendor-onboarding-notes.md",
-        "vendor-onboarding-notes.md"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 1,
-      "factsTotal": 1
-    },
-    {
-      "id": "q15",
-      "question": "Is the Q2 CloudStore contract cheaper or more expensive than Q1?",
-      "answer": "✅ **Grounded answer** — confidence 72%\n\nThe Q2 CloudStore contract is projected to be roughly 9% lower than Q1 at current storage volume, despite the added Priority support fee [1]. This is driven mainly by the tiered pricing and reduced egress fees [1], which include a lower price per GB-month for storage beyond 50TB and lower egress fees [2].\n\nSources:\n[1] vendor-contract-changes.md (Uploaded Document, updated 2026-07-23)\n[2] vendor-contract-changes.md (Uploaded Document, updated 2026-07-23)\n[3] vendor-onboarding-notes.md (Uploaded Document, updated 2026-07-23)\n[4] vendor-onboarding-notes.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3314,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "vendor-contract-changes.md",
-      "retrievedSources": [
-        "vendor-contract-changes.md",
-        "vendor-contract-changes.md",
-        "vendor-onboarding-notes.md",
-        "vendor-onboarding-notes.md"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 1,
-      "factsTotal": 1
-    },
-    {
-      "id": "q16",
-      "question": "Has a duplicate invoice email issue come up before, and how was it resolved?",
-      "answer": "✅ **Grounded answer** — confidence 68%\n\nYes, a duplicate invoice email issue has come up before, as seen in [2]. The issue occurred when an enterprise client received the same monthly invoice email three times due to a retry-on-timeout mechanism in the billing notification job. The resolution, as stated in [2], was to add an idempotency key per invoice-send event to prevent duplicate sends. This issue is also mentioned again in [3] as a previously resolved ticket, but [2] provides the detailed explanation of the root cause and resolution. According to the support policy in [1], duplicate invoice emails should be merged and flagged to billing within 24 hours, but the specific resolution for the issue is described in [2].\n\nSources:\n[1] combined-test.txt (Uploaded Document, updated 2026-07-23)\n[2] support-tickets.md (Uploaded Document, updated 2026-07-23)\n[3] support-tickets.md (Uploaded Document, updated 2026-07-23)\n[4] support-tickets.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3559,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "support-tickets.md",
-      "retrievedSources": [
-        "combined-test.txt",
-        "support-tickets.md",
-        "support-tickets.md",
-        "support-tickets.md"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 1,
-      "factsTotal": 1
-    },
-    {
-      "id": "q17",
-      "question": "Why did exporting a large date range return a 500 error?",
-      "answer": "✅ **Grounded answer** — confidence 70%\n\nAccording to [1], exporting a large date range returned a 500 error because the export job was timing out at the 30-second worker limit when the query spanned more than ~90 days of row-level data.\n\nSources:\n[1] support-tickets.md (Uploaded Document, updated 2026-07-23)\n[2] support-tickets.md (Uploaded Document, updated 2026-07-23)\n[3] support-tickets.md (Uploaded Document, updated 2026-07-23)\n[4] support-tickets.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 4826,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "support-tickets.md",
-      "retrievedSources": [
-        "support-tickets.md",
-        "support-tickets.md",
-        "support-tickets.md",
-        "support-tickets.md"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 0,
-      "factsTotal": 2
-    },
-    {
-      "id": "q18",
-      "question": "What caused the Okta SSO login loop issue?",
-      "answer": "✅ **Grounded answer** — confidence 71%\n\nThe Okta SSO login loop issue was caused by the client's Okta configuration sending group attributes in a format that the SAML assertion consumer service didn't expect, specifically nested arrays instead of flat strings [1].\n\nSources:\n[1] support-tickets.md (Uploaded Document, updated 2026-07-23)\n[2] support-tickets.md (Uploaded Document, updated 2026-07-23)\n[3] support-tickets.md (Uploaded Document, updated 2026-07-23)\n[4] support-tickets.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3007,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "support-tickets.md",
-      "retrievedSources": [
-        "support-tickets.md",
-        "support-tickets.md",
-        "support-tickets.md",
-        "support-tickets.md"
-      ],
-      "retrievalHit": true,
-      "citationPresent": true,
-      "factsHit": 1,
-      "factsTotal": 1
-    },
-    {
-      "id": "q19",
-      "question": "Why was an enterprise refund delayed past the stated SLA?",
-      "answer": "✅ **Grounded answer** — confidence 71%\n\nThe enterprise refund was delayed past the stated SLA because the refund had been approved by Finance, but the Account Manager sign-off step, which is required for enterprise refunds [1], was never completed. This was due to the approval request email being sent to an inactive Account Manager account after a personnel change [1]. The typical resolution time for refund requests is within 5 business days [1, 4].\n\nSources:\n[1] support-tickets.md (Uploaded Document, updated 2026-07-23)\n[2] test-doc.txt (Uploaded Document, updated 2026-07-23)\n[3] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[4] refund-policy.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3433,
-      "should_refuse": false,
-      "refused": false,
-      "correctRefusalBehavior": true,
-      "expected_source": "support-tickets.md",
-      "retrievedSources": [
-        "support-tickets.md",
-        "test-doc.txt",
         "refund-policy.md",
         "refund-policy.md"
       ],
       "retrievalHit": true,
       "citationPresent": true,
-      "factsHit": 2,
-      "factsTotal": 2
+      "factsHit": 1,
+      "factsTotal": 1,
+      "rawStatus": "grounded"
     },
     {
-      "id": "q20",
-      "question": "How long does Elevated access last before it needs to be renewed?",
-      "answer": "✅ **Grounded answer** — confidence 49%\n\nElevated access lasts for 90 days before it needs to be renewed [1].\n\nSources:\n[1] security-access-policy.md (Uploaded Document, updated 2026-07-23)\n[2] security-access-policy.md (Uploaded Document, updated 2026-07-23)\n[3] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[4] pto-policy.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3769,
+      "id": "q08",
+      "question": "Who has to approve a PTO request during an active client engagement?",
+      "answer": "During an active client engagement a PTO request must be **co‑approved** by two people:\n\n* **Your direct manager**  \n* **The engagement (or project) lead for the client account**  \n\nBoth approvals are required before the request can be finalized【2】. (If the request is submitted with less than 10 business days’ notice, the engagement lead may still decide to approve it, but the standard requirement remains the dual approval【1】.)",
+      "latencyMs": 3921,
+      "outcome": "answered",
       "should_refuse": false,
       "refused": false,
       "correctRefusalBehavior": true,
-      "expected_source": "security-access-policy.md",
+      "expected_source": "pto-policy.md",
       "retrievedSources": [
-        "security-access-policy.md",
-        "security-access-policy.md",
         "pto-policy.md",
-        "pto-policy.md"
+        "pto-policy.md",
+        "security-access-policy.md",
+        "refund-policy.md"
+      ],
+      "retrievalHit": true,
+      "citationPresent": true,
+      "factsHit": 2,
+      "factsTotal": 2,
+      "rawStatus": "grounded"
+    },
+    {
+      "id": "q09",
+      "question": "Do I need advance notice for an emergency absence during a client engagement?",
+      "answer": "No. For an unplanned, emergency‑type absence (e.g., illness or a family emergency) you are **not required to give advance notice**. You should simply notify your manager and the engagement lead as soon as reasonably possible, and the engagement lead will arrange any same‑day coverage needed for client‑facing work【1†L4-L7】. (Regular PTO requests do require a 10‑business‑day lead time, but emergencies are treated as an exception to that rule【2†L9-L12】.)",
+      "latencyMs": 4292,
+      "outcome": "answered",
+      "should_refuse": false,
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "pto-policy.md",
+      "retrievedSources": [
+        "pto-policy.md",
+        "pto-policy.md",
+        "refund-policy.md",
+        "refund-policy.md"
+      ],
+      "retrievalHit": true,
+      "citationPresent": true,
+      "factsHit": 0,
+      "factsTotal": 1,
+      "rawStatus": "grounded"
+    },
+    {
+      "id": "q10",
+      "question": "How many unused PTO days roll over to the next year?",
+      "answer": "Up to 5 unused PTO days can be carried over into the next calendar year; any additional unused days are forfeited unless required by local law [2].",
+      "latencyMs": 3696,
+      "outcome": "answered",
+      "should_refuse": false,
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "pto-policy.md",
+      "retrievedSources": [
+        "pto-policy.md",
+        "pto-policy.md",
+        "refund-policy.md",
+        "refund-policy.md"
       ],
       "retrievalHit": true,
       "citationPresent": true,
       "factsHit": 1,
-      "factsTotal": 1
+      "factsTotal": 1,
+      "rawStatus": "grounded"
     },
     {
-      "id": "q21",
-      "question": "What's the minimum password length for Restricted-tier accounts?",
-      "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
-      "latencyMs": 5996,
+      "id": "q11",
+      "question": "Summarize what changed in the vendor contract from Q1 to Q2.",
+      "answer": "**Vendor contract changes from Q1 to Q2**\n\n| Area | Q1 terms | Q2 terms | What changed |\n|------|----------|----------|--------------|\n| **Pricing** | Flat $0.023 / GB‑month; egress $0.09 / GB | Tiered storage pricing: $0.021 / GB‑month for the first 50 TB, then $0.017 / GB‑month; egress reduced to $0.07 / GB | Introduced volume‑discount tiers and lower egress fees [1] |\n| **SLA** | 99.9 % uptime guarantee; breach remedied only with a written apology | 99.95 % uptime guarantee; service‑credit penalty of 5 % of the month’s bill per half‑hour of downtime beyond the SLA, capped at 30 % [1] |\n| **Data retention & deletion** | No explicit deletion SLA | CloudStore must permanently delete data within 30 days of a formal request and can provide a signed certificate of destruction [2] |\n| **Support tier** | Standard support (24‑hour response) | Priority support (4‑hour response for critical issues) with an added flat fee of $1,200 / month [2] |\n| **Overall cost impact** | Baseline cost | Projected ~9 % lower total cost despite the support fee, driven by tiered pricing and lower egress fees [2] |\n\nThese points capture all the documented changes between the Q1 and Q2 CloudStore hosting contracts.",
+      "latencyMs": 9545,
+      "outcome": "answered",
       "should_refuse": false,
-      "refused": true,
-      "correctRefusalBehavior": false,
-      "expected_source": "security-access-policy.md",
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "vendor-contract-changes.md",
       "retrievedSources": [
-        "security-access-policy.md",
-        "security-access-policy.md",
+        "vendor-contract-changes.md",
+        "vendor-contract-changes.md",
         "vendor-onboarding-notes.md",
-        "vendor-contract-changes.md"
+        "refund-policy.md"
       ],
       "retrievalHit": true,
-      "citationPresent": false,
-      "factsHit": 0,
-      "factsTotal": 1
+      "citationPresent": true,
+      "factsHit": 2,
+      "factsTotal": 2,
+      "rawStatus": "grounded"
     },
     {
-      "id": "q22",
-      "question": "How quickly must a security incident be reported?",
-      "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
-      "latencyMs": 3214,
+      "id": "q12",
+      "question": "What is the new uptime SLA guarantee for CloudStore in Q2?",
+      "answer": "The Q2 contract raises CloudStore’s uptime guarantee to **99.95 %** [2].",
+      "latencyMs": 14476,
+      "outcome": "answered",
       "should_refuse": false,
-      "refused": true,
-      "correctRefusalBehavior": false,
-      "expected_source": "security-access-policy.md",
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "vendor-contract-changes.md",
       "retrievedSources": [
-        "security-access-policy.md",
-        "security-access-policy.md",
+        "vendor-contract-changes.md",
+        "vendor-contract-changes.md",
+        "vendor-onboarding-notes.md",
+        "vendor-onboarding-notes.md"
+      ],
+      "retrievalHit": true,
+      "citationPresent": true,
+      "factsHit": 1,
+      "factsTotal": 1,
+      "rawStatus": "grounded"
+    },
+    {
+      "id": "q13",
+      "question": "How much does Priority support cost per month for CloudStore?",
+      "answer": "Priority support for CloudStore costs an additional **$1,200 per month**【1】.",
+      "latencyMs": 4076,
+      "outcome": "answered",
+      "should_refuse": false,
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "vendor-contract-changes.md",
+      "retrievedSources": [
+        "vendor-contract-changes.md",
+        "vendor-contract-changes.md",
+        "vendor-onboarding-notes.md",
+        "vendor-onboarding-notes.md"
+      ],
+      "retrievalHit": true,
+      "citationPresent": true,
+      "factsHit": 1,
+      "factsTotal": 1,
+      "rawStatus": "grounded"
+    },
+    {
+      "id": "q14",
+      "question": "What data deletion guarantee did CloudStore add in Q2?",
+      "answer": "In Q2 the contract added a data‑deletion guarantee that CloudStore must **permanently delete data within 30 days of a formal deletion request** and can provide a signed certificate of destruction on request [1].",
+      "latencyMs": 9201,
+      "outcome": "answered",
+      "should_refuse": false,
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "vendor-contract-changes.md",
+      "retrievedSources": [
+        "vendor-contract-changes.md",
+        "vendor-contract-changes.md",
+        "vendor-onboarding-notes.md",
+        "vendor-onboarding-notes.md"
+      ],
+      "retrievalHit": true,
+      "citationPresent": true,
+      "factsHit": 1,
+      "factsTotal": 1,
+      "rawStatus": "grounded"
+    },
+    {
+      "id": "q15",
+      "question": "Is the Q2 CloudStore contract cheaper or more expensive than Q1?",
+      "answer": "The Q2 CloudStore contract is cheaper than the Q1 contract. Even after adding a $1,200 /month Priority‑support fee, the modeled Q2 costs are projected to be about 9 % lower than Q1 at current storage volumes, thanks to tiered storage pricing and lower egress fees [1]. The pricing details confirm this: Q1 was a flat $0.023 /GB‑month with $0.09 /GB egress, while Q2 moves to $0.021 /GB‑month (first 50 TB) dropping to $0.017 /GB‑month thereafter, and egress falls to $0.07 /GB [2].",
+      "latencyMs": 9935,
+      "outcome": "answered",
+      "should_refuse": false,
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "vendor-contract-changes.md",
+      "retrievedSources": [
+        "vendor-contract-changes.md",
+        "vendor-contract-changes.md",
+        "vendor-onboarding-notes.md",
+        "vendor-onboarding-notes.md"
+      ],
+      "retrievalHit": true,
+      "citationPresent": true,
+      "factsHit": 1,
+      "factsTotal": 1,
+      "rawStatus": "grounded"
+    },
+    {
+      "id": "q16",
+      "question": "Has a duplicate invoice email issue come up before, and how was it resolved?",
+      "answer": "Yes. Ticket #5390 recorded that an enterprise client received the same monthly invoice email three times. The duplicate sends were caused by a retry‑on‑timeout mechanism in the billing‑notification job that retried without first confirming whether the email had already been delivered, so transient network delays triggered extra sends [1].  \n\nThe issue was fixed by adding an **idempotency key** to each invoice‑send event and checking that key before any retry attempt, ensuring that a successful send is not repeated. The fix is now recommended for any workflow that uses automatic retries [1][2].",
+      "latencyMs": 11474,
+      "outcome": "answered",
+      "should_refuse": false,
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "support-tickets.md",
+      "retrievedSources": [
+        "support-tickets.md",
+        "support-tickets.md",
+        "support-tickets.md",
+        "refund-policy.md"
+      ],
+      "retrievalHit": true,
+      "citationPresent": true,
+      "factsHit": 1,
+      "factsTotal": 1,
+      "rawStatus": "grounded"
+    },
+    {
+      "id": "q17",
+      "question": "Why did exporting a large date range return a 500 error?",
+      "answer": "Exporting a very large date range caused the export job to exceed the platform’s 30‑second worker timeout. When the query covered more than roughly 90 days of row‑level data, the single‑pass export ran longer than the allowed time and the worker was terminated, resulting in a 500 error [1].",
+      "latencyMs": 8978,
+      "outcome": "answered",
+      "should_refuse": false,
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "support-tickets.md",
+      "retrievedSources": [
+        "support-tickets.md",
+        "support-tickets.md",
         "support-tickets.md",
         "support-tickets.md"
       ],
       "retrievalHit": true,
-      "citationPresent": false,
-      "factsHit": 0,
-      "factsTotal": 1
+      "citationPresent": true,
+      "factsHit": 1,
+      "factsTotal": 2,
+      "rawStatus": "grounded"
     },
     {
-      "id": "q23",
-      "question": "Who can grant emergency same-day elevated access?",
-      "answer": "✅ **Grounded answer** — confidence 50%\n\nAccording to [1], emergency same-day elevated access can be granted by the on-call security lead.\n\nSources:\n[1] security-access-policy.md (Uploaded Document, updated 2026-07-23)\n[2] security-access-policy.md (Uploaded Document, updated 2026-07-23)\n[3] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[4] pto-policy.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3291,
+      "id": "q18",
+      "question": "What caused the Okta SSO login loop issue?",
+      "answer": "The login loop occurred because our SAML assertion consumer service rejected the Okta assertion – the client’s Okta configuration was sending group attributes as nested arrays, while our parser expected flat‑string values. This mismatch caused the assertion to be rejected and the user to be redirected back to the login page repeatedly【1】.",
+      "latencyMs": 9010,
+      "outcome": "answered",
+      "should_refuse": false,
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "support-tickets.md",
+      "retrievedSources": [
+        "support-tickets.md",
+        "support-tickets.md",
+        "support-tickets.md",
+        "support-tickets.md"
+      ],
+      "retrievalHit": true,
+      "citationPresent": true,
+      "factsHit": 1,
+      "factsTotal": 1,
+      "rawStatus": "grounded"
+    },
+    {
+      "id": "q19",
+      "question": "Why was an enterprise refund delayed past the stated SLA?",
+      "answer": "The refund was delayed because the required **Account Manager sign‑off** never happened. Finance had already approved the refund, but the approval request was emailed to an Account Manager whose account had been marked inactive after a personnel change, so the AM never completed the final step required for enterprise refunds. This left the request stuck past the 5‑business‑day SLA [1].  \n\nEnterprise refunds must be jointly approved by Finance and the assigned Account Manager before they are processed, and they are normally resolved within five business days [3]. The missing AM approval caused the SLA breach.",
+      "latencyMs": 4103,
+      "outcome": "answered",
+      "should_refuse": false,
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "support-tickets.md",
+      "retrievedSources": [
+        "support-tickets.md",
+        "refund-policy.md",
+        "refund-policy.md",
+        "support-tickets.md"
+      ],
+      "retrievalHit": true,
+      "citationPresent": true,
+      "factsHit": 2,
+      "factsTotal": 2,
+      "rawStatus": "grounded"
+    },
+    {
+      "id": "q20",
+      "question": "How long does Elevated access last before it needs to be renewed?",
+      "answer": "Elevated access is granted for a limited period and automatically expires after **90 days**, at which point it must be re‑requested. [1]",
+      "latencyMs": 9431,
+      "outcome": "answered",
       "should_refuse": false,
       "refused": false,
       "correctRefusalBehavior": true,
@@ -468,93 +448,149 @@
       "retrievalHit": true,
       "citationPresent": true,
       "factsHit": 1,
-      "factsTotal": 1
+      "factsTotal": 1,
+      "rawStatus": "grounded"
+    },
+    {
+      "id": "q21",
+      "question": "What's the minimum password length for Restricted-tier accounts?",
+      "answer": "I don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
+      "latencyMs": 3445,
+      "outcome": "refused",
+      "should_refuse": false,
+      "refused": true,
+      "correctRefusalBehavior": false,
+      "expected_source": "security-access-policy.md",
+      "retrievedSources": [],
+      "retrievalHit": false,
+      "citationPresent": false,
+      "factsHit": 0,
+      "factsTotal": 1,
+      "rawStatus": "refused"
+    },
+    {
+      "id": "q22",
+      "question": "How quickly must a security incident be reported?",
+      "answer": "I don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
+      "latencyMs": 3178,
+      "outcome": "refused",
+      "should_refuse": false,
+      "refused": true,
+      "correctRefusalBehavior": false,
+      "expected_source": "security-access-policy.md",
+      "retrievedSources": [],
+      "retrievalHit": false,
+      "citationPresent": false,
+      "factsHit": 0,
+      "factsTotal": 1,
+      "rawStatus": "refused"
+    },
+    {
+      "id": "q23",
+      "question": "Who can grant emergency same-day elevated access?",
+      "answer": "Emergency same‑day elevated access can be granted by the **on‑call security lead**【1】.",
+      "latencyMs": 3606,
+      "outcome": "answered",
+      "should_refuse": false,
+      "refused": false,
+      "correctRefusalBehavior": true,
+      "expected_source": "security-access-policy.md",
+      "retrievedSources": [
+        "security-access-policy.md",
+        "security-access-policy.md",
+        "pto-policy.md",
+        "pto-policy.md"
+      ],
+      "retrievalHit": true,
+      "citationPresent": true,
+      "factsHit": 1,
+      "factsTotal": 1,
+      "rawStatus": "grounded"
     },
     {
       "id": "q24",
       "question": "How long does vendor onboarding typically take?",
-      "answer": "✅ **Grounded answer** — confidence 59%\n\nAccording to [1], the typical vendor onboarding process takes 2-3 weeks to complete, with the security questionnaire review being the most common bottleneck.\n\nSources:\n[1] vendor-onboarding-notes.md (Uploaded Document, updated 2026-07-23)\n[2] test-doc.txt (Uploaded Document, updated 2026-07-23)\n[3] refund-policy.md (Uploaded Document, updated 2026-07-23)\n[4] security-access-policy.md (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3187,
+      "answer": "Vendor onboarding generally takes **2–3 weeks** from start to finish, with the security questionnaire review often being the slowest step in the process【1】.",
+      "latencyMs": 8966,
+      "outcome": "answered",
       "should_refuse": false,
       "refused": false,
       "correctRefusalBehavior": true,
       "expected_source": "vendor-onboarding-notes.md",
       "retrievedSources": [
         "vendor-onboarding-notes.md",
-        "test-doc.txt",
+        "pto-policy.md",
         "refund-policy.md",
         "security-access-policy.md"
       ],
       "retrievalHit": true,
       "citationPresent": true,
       "factsHit": 1,
-      "factsTotal": 1
+      "factsTotal": 1,
+      "rawStatus": "grounded"
     },
     {
       "id": "q25",
       "question": "What's the biggest bottleneck in vendor onboarding?",
-      "answer": "✅ **Grounded answer** — confidence 56%\n\nThe biggest bottleneck in vendor onboarding is the security questionnaire review by the security team [1].\n\nSources:\n[1] vendor-onboarding-notes.md (Uploaded Document, updated 2026-07-23)\n[2] F.RELATORRE.pdf (Uploaded Document, updated 2026-07-23)\n[3] F.RELATORRE.pdf (Uploaded Document, updated 2026-07-23)\n[4] F.RELATORRE.pdf (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3261,
+      "answer": "The biggest bottleneck in vendor onboarding is the security questionnaire review performed by the security team — it’s identified as the most common delay in the process【1】.",
+      "latencyMs": 4522,
+      "outcome": "answered",
       "should_refuse": false,
       "refused": false,
       "correctRefusalBehavior": true,
       "expected_source": "vendor-onboarding-notes.md",
       "retrievedSources": [
         "vendor-onboarding-notes.md",
-        "F.RELATORRE.pdf",
-        "F.RELATORRE.pdf",
-        "F.RELATORRE.pdf"
+        "security-access-policy.md",
+        "vendor-contract-changes.md",
+        "security-access-policy.md"
       ],
       "retrievalHit": true,
       "citationPresent": true,
       "factsHit": 1,
-      "factsTotal": 1
+      "factsTotal": 1,
+      "rawStatus": "grounded"
     },
     {
       "id": "q26",
       "question": "What is the CEO's home address?",
-      "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
-      "latencyMs": 3162,
+      "answer": "I don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
+      "latencyMs": 3404,
+      "outcome": "refused",
       "should_refuse": true,
       "refused": true,
       "correctRefusalBehavior": true,
       "expected_source": null,
-      "retrievedSources": [
-        "security-access-policy.md",
-        "security-access-policy.md",
-        "vendor-onboarding-notes.md",
-        "F.RELATORRE.pdf"
-      ],
+      "retrievedSources": [],
       "retrievalHit": null,
       "citationPresent": false,
       "factsHit": 0,
-      "factsTotal": 0
+      "factsTotal": 0,
+      "rawStatus": "refused"
     },
     {
       "id": "q27",
       "question": "What is my personal salary?",
-      "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
-      "latencyMs": 3145,
+      "answer": "I don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
+      "latencyMs": 3667,
+      "outcome": "refused",
       "should_refuse": true,
       "refused": true,
       "correctRefusalBehavior": true,
       "expected_source": null,
-      "retrievedSources": [
-        "F.RELATORRE.pdf",
-        "pto-policy.md",
-        "F.RELATORRE.pdf",
-        "F.RELATORRE.pdf"
-      ],
+      "retrievedSources": [],
       "retrievalHit": null,
       "citationPresent": false,
       "factsHit": 0,
-      "factsTotal": 0
+      "factsTotal": 0,
+      "rawStatus": "refused"
     },
     {
       "id": "q28",
       "question": "What's the wifi password for the office?",
-      "answer": "✅ **Grounded answer** — confidence 47%\n\nThe wifi password for the office is not mentioned in the provided context chunks [1], [2], [3], or [4]. None of these sources contain information about wifi passwords.\n\nSources:\n[1] security-access-policy.md (Uploaded Document, updated 2026-07-23)\n[2] security-access-policy.md (Uploaded Document, updated 2026-07-23)\n[3] pto-policy.md (Uploaded Document, updated 2026-07-23)\n[4] real-test.txt (Uploaded Document, updated 2026-07-23)",
-      "latencyMs": 3066,
+      "answer": "The provided documents do not contain any information about the office Wi‑Fi password.",
+      "latencyMs": 4103,
+      "outcome": "answered",
       "should_refuse": true,
       "refused": false,
       "correctRefusalBehavior": false,
@@ -562,53 +598,48 @@
       "retrievedSources": [
         "security-access-policy.md",
         "security-access-policy.md",
-        "pto-policy.md",
-        "real-test.txt"
+        "sample-knowledge-doc.md",
+        "pto-policy.md"
       ],
       "retrievalHit": null,
-      "citationPresent": true,
+      "citationPresent": false,
       "factsHit": 0,
-      "factsTotal": 0
+      "factsTotal": 0,
+      "rawStatus": "grounded"
     },
     {
       "id": "q29",
       "question": "What's the weather like today?",
-      "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
-      "latencyMs": 3354,
+      "answer": "I don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
+      "latencyMs": 3667,
+      "outcome": "refused",
       "should_refuse": true,
       "refused": true,
       "correctRefusalBehavior": true,
       "expected_source": null,
-      "retrievedSources": [
-        "F.RELATORRE.pdf",
-        "F.RELATORRE.pdf",
-        "vendor-onboarding-notes.md",
-        "F.RELATORRE.pdf"
-      ],
+      "retrievedSources": [],
       "retrievalHit": null,
       "citationPresent": false,
       "factsHit": 0,
-      "factsTotal": 0
+      "factsTotal": 0,
+      "rawStatus": "refused"
     },
     {
       "id": "q30",
       "question": "Can you recommend a good restaurant nearby?",
-      "answer": "⚠️ **Not found in knowledge base**\n\nI don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
-      "latencyMs": 3632,
+      "answer": "I don't have information on this in our knowledge base yet. I've flagged it for the team to look into.",
+      "latencyMs": 3539,
+      "outcome": "refused",
       "should_refuse": true,
       "refused": true,
       "correctRefusalBehavior": true,
       "expected_source": null,
-      "retrievedSources": [
-        "F.RELATORRE.pdf",
-        "F.RELATORRE.pdf",
-        "F.RELATORRE.pdf",
-        "F.RELATORRE.pdf"
-      ],
+      "retrievedSources": [],
       "retrievalHit": null,
       "citationPresent": false,
       "factsHit": 0,
-      "factsTotal": 0
+      "factsTotal": 0,
+      "rawStatus": "refused"
     }
   ]
 }

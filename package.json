@@ -1,0 +1,12 @@
+{
+  "name": "mimo",
+  "private": true,
+  "description": "RAG-powered internal knowledge assistant. The app lives in frontend/, the backend is the n8n workflow in n8n/.",
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\"",
+    "eval:rescore": "node seed/eval/rescore.js"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}
