@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowUp, SearchX, ShieldCheck, Lock } from 'lucide-react';
+import { ArrowUp, SearchX, ShieldCheck, Lock, Hourglass } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { apiFetch } from '../lib/apiFetch';
 import { primaryButtonClass } from '../components/ui';
@@ -40,7 +40,7 @@ function suggestionsFromDocuments(documents: LibraryDoc[]): string[] {
 type Citation = { marker: string; source: string; section: string; updatedAt: string };
 
 type ParsedAnswer = {
-  status: 'grounded' | 'refused' | 'unauthorized';
+  status: 'grounded' | 'refused' | 'unauthorized' | 'busy';
   confidence: number;
   body: string;
   citations: Citation[];
@@ -57,7 +57,7 @@ type Turn =
 // string the frontend has to regex-parse -- one seam, and a citation can't
 // silently fail to match a line pattern.
 type ChatReply = {
-  status: 'grounded' | 'refused' | 'unauthorized';
+  status: 'grounded' | 'refused' | 'unauthorized' | 'busy';
   confidence: number;
   body: string;
   citationsJson: string;
@@ -144,6 +144,15 @@ function StatusLine({ parsed }: { parsed: ParsedAnswer }) {
     return (
       <p className="inline-flex items-center gap-1.5 font-mono text-xs text-foreground">
         <SearchX className="size-3.5" aria-hidden="true" /> not found in the knowledge base
+      </p>
+    );
+  }
+  // The workflow's fallback when answer generation still fails after its
+  // retries (usually a model rate limit): temporary, so say try again.
+  if (parsed.status === 'busy') {
+    return (
+      <p className="inline-flex items-center gap-1.5 font-mono text-xs text-warning">
+        <Hourglass className="size-3.5" aria-hidden="true" /> busy · try again in a moment
       </p>
     );
   }

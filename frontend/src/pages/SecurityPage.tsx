@@ -13,7 +13,7 @@ const NAV = [
 
 const ROUTES = [
   ['chat', 'any signed-in user', 'Answers only from passages the role may see'],
-  ['library', 'any signed-in user', 'Lists ingested documents'],
+  ['library', 'any signed-in user', 'Lists only the documents the role may see'],
   ['upload', 'admin', 'Adds a document and sets its visibility'],
   ['dashboard-stats', 'admin', 'Reads query logs'],
 ] as const;
@@ -121,6 +121,12 @@ export default function SecurityPage() {
               Admin-only documents are filtered inside the chat workflow itself, after retrieval and before ranking. A
               member&apos;s question can match an admin-only passage in the vector search. It is still re-scored by
               Hugging Face with the other candidates, then dropped before it is ranked, cited, or sent to Groq.
+            </P>
+            <P>
+              The library applies the same rule, so a member never learns an admin-only document exists, not even its
+              file name. That check was missing until September 2026, when the automated tests caught it. The tests
+              read the exported workflow and fail if any route loses its token check, its role check, or its bound SQL
+              parameters.
             </P>
           </Section>
 

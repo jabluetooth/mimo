@@ -39,6 +39,8 @@ const MEASURED = [
   ['False refusals', '12% → 8%', 'After moving the gate from 0.50 to 0.45'],
   ['Correct refusals', '100% → 80%', 'The cost of that move: one question that should be refused now gets an answer'],
   ['Citation present', '88% → 92%', 'Answers that cite at least one source'],
+  ['Empty replies under load', '23% → 0%', 'A September re-run caught answers failing silently when asked back to back; retries fixed it'],
+  ['Automated tests', '85', 'Every route’s token and role check, bound SQL and the confidence gate, run in CI on each change'],
 ] as const;
 
 const TRUST = [
@@ -160,7 +162,8 @@ export default function LandingPage() {
             <Rise delay={0.2}>
               <p className="mt-6 max-w-[36ch] text-sm leading-relaxed text-muted">
                 A 30-question ground-truth set and a 12-case adversarial suite, run against production rather than a
-                local mock. A small suite on a sample handbook: read it as a regression guard, not a benchmark.
+                local mock in July 2026 and again in September. A small suite on a sample handbook: read it as a
+                regression guard, not a benchmark. Alongside it, automated tests check the workflow itself.
               </p>
             </Rise>
           </div>

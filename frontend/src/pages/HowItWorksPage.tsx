@@ -11,9 +11,16 @@ const ABLATION = [
   ['Expected document retrieved', '100%', '100%'],
 ] as const;
 
+const RELIABILITY = [
+  ['Empty replies', '23%', '0%'],
+  ['Expected document retrieved', '64%', '92%'],
+  ['Citation present', '64%', '92%'],
+  ['p95 latency', '4.9 s', '11.5 s'],
+] as const;
+
 const NOT_MEASURED = [
   ['Cost per query', 'Token cost isn’t logged by the workflow yet'],
-  ['Error rate', 'Only executions that reach the logging step are recorded; a hard n8n failure upstream never appears'],
+  ['Errors on the dashboard', 'The eval measures error rate, but the live dashboard only counts executions that reach the logging step'],
   ['Hybrid search', 'Retrieval is vector-only; keyword matching would help exact terms like policy codes'],
   ['Scheduled sync', 'Documents arrive by upload, not from a watched Drive folder'],
 ] as const;
@@ -92,6 +99,51 @@ export default function HowItWorksPage() {
             <p className="mt-4 font-mono text-xs leading-relaxed text-muted">
               30 questions, 25 answerable and 5 that should be refused, run against the live deployment. Raw results in
               seed/eval.
+            </p>
+          </Rise>
+        </div>
+      </section>
+
+      <section className="px-[5vw] pt-[clamp(5rem,11vw,11rem)]">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <Tag>the second fix</Tag>
+            <LineReveal
+              className="mt-5 text-[clamp(2rem,4.4vw,4.25rem)] font-semibold leading-[1] tracking-[-0.035em]"
+              lines={['Silent failures,', 'made loud.']}
+            />
+            <Rise delay={0.2}>
+              <p className="mt-6 max-w-[38ch] text-sm leading-relaxed text-muted">
+                A September re-run found seven of thirty questions coming back empty when asked back to back, and the
+                old scorer had counted them as answers. Asked twenty seconds apart, all seven were answered correctly,
+                which pinned it on the model&apos;s per-minute rate limit. Answer generation now retries, and if it
+                still fails the chat says it is busy instead of going quiet.
+              </p>
+            </Rise>
+          </div>
+          <Rise>
+            <table className="w-full text-left text-sm">
+              <caption className="sr-only">Back-to-back eval before and after adding retries</caption>
+              <thead>
+                <tr className="border-b border-border font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+                  <th scope="col" className="py-3 pr-4 font-normal">Measure</th>
+                  <th scope="col" className="py-3 pr-4 font-normal">Before</th>
+                  <th scope="col" className="py-3 font-normal">With retries</th>
+                </tr>
+              </thead>
+              <tbody>
+                {RELIABILITY.map(([name, before, after]) => (
+                  <tr key={name} className="border-b border-border align-baseline">
+                    <th scope="row" className="py-4 pr-4 font-medium">{name}</th>
+                    <td className="py-4 pr-4 font-mono tabular-nums text-muted">{before}</td>
+                    <td className="py-4 font-mono tabular-nums text-accent">{after}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-4 font-mono text-xs leading-relaxed text-muted">
+              Same 30 questions, fired back to back at the live deployment. Slower at the tail because retries wait out
+              the limit instead of failing.
             </p>
           </Rise>
         </div>
