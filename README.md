@@ -55,14 +55,14 @@ The two remaining misses are the same false refusals as in July, and one should-
 ## Tests
 
 ```bash
-npm test   # 85 tests, well under a second, no network or services; Node 22.18+
+npm test   # 87 tests, well under a second, no network or services; Node 22.18+
 ```
 
 CI runs them on every push (`.github/workflows/ci.yml`, alongside the frontend build). Zero dependencies: Node's built-in test runner, and Node's native TypeScript support for the one frontend file.
 
 | File | Covers |
 |---|---|
-| `tests/workflow-security.test.mjs` | The n8n workflow's wiring, checked on the exported graph: every protected endpoint verifies the JWT before anything else runs, admin routes check the role and 403 otherwise, JWTs are pinned to HS256 and expire, login/signup are rate-limited before any credential check, every SQL value is a bound parameter, and nothing reaches the LLM without passing the 0.45 confidence gate |
+| `tests/workflow-security.test.mjs` | The n8n workflow's wiring, checked on the exported graph: every protected endpoint verifies the JWT before anything else runs, admin routes check the role and 403 otherwise, JWTs are pinned to HS256 and expire, login/signup are rate-limited before any credential check, every SQL value is a bound parameter, and nothing reaches the LLM without passing the 0.45 confidence gate, and a failed generation retries and then replies `busy` instead of empty |
 | `tests/code-nodes.test.mjs` | The workflow's Code nodes, run from the real export: constant-time password compare, re-scoring and citation numbering, role-based retrieval (a member never gets an admin-only chunk, and their confidence is computed from visible chunks only), and the document library |
 | `tests/eval-scoring.test.mjs` | The eval harness's scorer and offline re-scoring |
 | `tests/api-fetch.test.mjs` | The frontend's single API seam (`frontend/src/lib/apiFetch.ts`) |

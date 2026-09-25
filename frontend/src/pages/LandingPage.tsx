@@ -40,7 +40,7 @@ const MEASURED = [
   ['Correct refusals', '100% → 80%', 'The cost of that move: one question that should be refused now gets an answer'],
   ['Citation present', '88% → 92%', 'Answers that cite at least one source'],
   ['Empty replies under load', '23% → 0%', 'A September re-run caught answers failing silently when asked back to back; retries fixed it'],
-  ['Automated tests', '85', 'Every route’s token and role check, bound SQL and the confidence gate, run in CI on each change'],
+  ['Automated tests', '87', 'Every route’s token and role check, bound SQL and the confidence gate, run in CI on each change'],
 ] as const;
 
 const TRUST = [

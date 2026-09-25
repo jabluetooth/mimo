@@ -208,6 +208,29 @@ describe("grounded answering", () => {
     assert.ok(g.reachable("Generate Grounded Answer").has("Log Answered Query"));
   });
 
+  it("retries answer generation instead of failing on the first rate-limit error", () => {
+    // Without this, back-to-back questions returned empty replies 23% of the time (Sep 2026 eval).
+    const gen = g.node("Generate Grounded Answer");
+    assert.equal(gen.retryOnFail, true);
+    assert.ok((gen.maxTries ?? 3) >= 2, "n8n's default is 3 tries when maxTries is unset");
+    assert.ok(gen.waitBetweenTries >= 1000, "waits long enough for a per-minute limit to ease");
+  });
+
+  it("answers with an explicit busy reply when generation still fails, never an empty one", () => {
+    const gen = g.node("Generate Grounded Answer");
+    assert.equal(gen.onError, "continueErrorOutput");
+    assert.deepEqual(g.next("Generate Grounded Answer", 1), ["Reply: Busy"]);
+
+    const fields = Object.fromEntries(
+      g.node("Reply: Busy").parameters.assignments.assignments.map((a) => [a.name.replace(/^=/, ""), a.value]),
+    );
+    assert.equal(fields.status, "busy", "the chat UI and eval scorer key off this status");
+    assert.ok(fields.body.trim().length > 0, "a message the user can read");
+    assert.equal(fields.citationsJson, "[]");
+    assert.ok("confidence" in fields, "same four fields as every other chat reply");
+    assert.deepEqual(sensitiveNodes(g.reachable("Reply: Busy")), [], "the fallback does nothing else");
+  });
+
   it("skips the reranker when retrieval returns nothing", () => {
     assert.deepEqual(g.next("Has Candidate Chunks?", 1), ["Build Grounded Context"]);
   });

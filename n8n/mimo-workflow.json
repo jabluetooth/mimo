@@ -8,13 +8,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "d10b41ef-98f3-436f-88f6-d18c3fdd8954",
+      "id": "eb926127-42a2-49ae-919d-2cdaa290516e",
       "name": "Signup Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -1648,
-        -672
+        6400,
+        3184
       ],
       "webhookId": "2bc9aab8-3676-4f0a-894d-6445be79b6a6"
     },
@@ -26,13 +26,13 @@
           "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email] }}"
         }
       },
-      "id": "b1c2d3e4-1001-4a1a-9a1a-100000000001",
+      "id": "a95b50f8-7b33-472f-b3f7-cfe1fc658e0d",
       "name": "Count Recent Signup Attempts",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1568,
-        -784
+        6624,
+        3184
       ],
       "credentials": {
         "postgres": {
@@ -64,13 +64,13 @@
         },
         "options": {}
       },
-      "id": "b1c2d3e4-1002-4a1a-9a1a-100000000002",
+      "id": "4f9f65db-4cd9-4f09-8661-c9e400ed6b22",
       "name": "Too Many Signup Attempts?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1520,
-        -784
+        6848,
+        3184
       ]
     },
     {
@@ -81,13 +81,13 @@
           "responseCode": 429
         }
       },
-      "id": "b1c2d3e4-1003-4a1a-9a1a-100000000003",
+      "id": "eefe6faa-e8b8-43a5-b311-1d689c3e0d98",
       "name": "Respond Rate Limited (Signup)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        -1472,
-        -880
+        7072,
+        3088
       ]
     },
     {
@@ -98,13 +98,13 @@
           "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email] }}"
         }
       },
-      "id": "b1c2d3e4-1004-4a1a-9a1a-100000000004",
+      "id": "7a50499a-a047-4fc8-8c24-c824d3b09ded",
       "name": "Record Signup Attempt",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1472,
-        -688
+        7072,
+        3280
       ],
       "credentials": {
         "postgres": {
@@ -121,13 +121,13 @@
           "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email] }}"
         }
       },
-      "id": "cbb12224-e376-4c08-913b-dbee71bc0b4f",
+      "id": "cf433310-c35e-4bf5-bd35-581f6051c23a",
       "name": "Check Email Exists (Signup)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1424,
-        -672
+        7296,
+        3280
       ],
       "credentials": {
         "postgres": {
@@ -159,13 +159,13 @@
         },
         "options": {}
       },
-      "id": "374fe6f7-4829-4645-84bf-6ceba7f39f0b",
+      "id": "aaddafab-687f-4b1b-998f-229f5ee957aa",
       "name": "Email Taken?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1200,
-        -672
+        7520,
+        3280
       ]
     },
     {
@@ -176,13 +176,13 @@
           "responseCode": 409
         }
       },
-      "id": "b71f8b08-b8c3-47d3-abcc-5f68d9c39939",
+      "id": "c1f58fa5-b6a4-4361-9235-b594568c8c65",
       "name": "Respond Email Taken",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        -976,
-        -768
+        7744,
+        3184
       ]
     },
     {
@@ -191,13 +191,13 @@
         "dataPropertyName": "salt",
         "encodingType": "hex"
       },
-      "id": "492531cb-e1ae-4e0d-a300-c9c84100be03",
+      "id": "13b28dbd-3831-4093-a81f-deb8e160804d",
       "name": "Generate Salt (Signup)",
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 2,
       "position": [
-        -976,
-        -576
+        7744,
+        3376
       ]
     },
     {
@@ -206,13 +206,13 @@
         "value": "={{ $json.salt + ':' + $('Signup Webhook').item.json.body.password }}",
         "dataPropertyName": "passwordHash"
       },
-      "id": "0854c5c1-c69f-4f17-a1e0-52e07c1bff65",
+      "id": "fcee19a8-656b-4b0c-a83d-a1f17662d62c",
       "name": "Hash Password (Signup)",
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 2,
       "position": [
-        -752,
-        -576
+        7968,
+        3376
       ],
       "credentials": {
         "crypto": {
@@ -229,13 +229,13 @@
           "queryReplacement": "={{ [$('Signup Webhook').item.json.body.email, $json.passwordHash, $('Generate Salt (Signup)').item.json.salt] }}"
         }
       },
-      "id": "c94e9c98-5e74-4e87-b4af-20374121d718",
+      "id": "6feba5fe-2fb2-45e9-83fa-c698b4166f03",
       "name": "Insert User",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -528,
-        -576
+        8192,
+        3376
       ],
       "credentials": {
         "postgres": {
@@ -252,13 +252,13 @@
           "algorithm": "HS256"
         }
       },
-      "id": "4419640c-f7d3-428d-b71f-ad9c01938986",
+      "id": "978b97af-d2d7-4b99-919c-5898b78fa37f",
       "name": "Sign JWT (Signup)",
       "type": "n8n-nodes-base.jwt",
       "typeVersion": 1,
       "position": [
-        -304,
-        -576
+        8416,
+        3376
       ],
       "credentials": {
         "jwtAuth": {
@@ -293,13 +293,13 @@
         },
         "options": {}
       },
-      "id": "82ce49a7-83e0-40d4-8e2f-641f2c267a3f",
+      "id": "006a3a27-22d5-45cd-8a33-c52c6836d6b2",
       "name": "Shape Signup Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -80,
-        -576
+        8640,
+        3376
       ]
     },
     {
@@ -308,13 +308,13 @@
         "responseBody": "={{ $json }}",
         "options": {}
       },
-      "id": "8dbd3ffb-127f-4166-b3cc-59f77600a30b",
+      "id": "cd5993f0-8062-431d-80f5-3d753e9eb80c",
       "name": "Respond Signup Success",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        144,
-        -576
+        8864,
+        3376
       ]
     },
     {
@@ -324,13 +324,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "4a0879d8-905d-4b3d-ad12-56a3f576326d",
+      "id": "cc0efffe-396c-4345-93e2-ccab3f40d61e",
       "name": "Login Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -1648,
-        -224
+        6400,
+        3696
       ],
       "webhookId": "85d54581-628d-41f9-aac8-f3e6a2610ad0"
     },
@@ -342,13 +342,13 @@
           "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
         }
       },
-      "id": "c1d2e3f4-2001-4a1a-9a1a-200000000001",
+      "id": "93c4a72e-9a3b-4d6c-8210-fcdd712f4d76",
       "name": "Count Recent Login Attempts",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1568,
-        -336
+        6624,
+        3696
       ],
       "credentials": {
         "postgres": {
@@ -380,13 +380,13 @@
         },
         "options": {}
       },
-      "id": "c1d2e3f4-2002-4a1a-9a1a-200000000002",
+      "id": "1c682ac4-2926-4cd3-8dc9-3549516b711f",
       "name": "Too Many Login Attempts?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1520,
-        -336
+        6848,
+        3696
       ]
     },
     {
@@ -397,13 +397,13 @@
           "responseCode": 429
         }
       },
-      "id": "c1d2e3f4-2003-4a1a-9a1a-200000000003",
+      "id": "16fd4378-ea1a-4608-a686-13f78ce2339c",
       "name": "Respond Rate Limited (Login)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        -1472,
-        -432
+        7072,
+        3600
       ]
     },
     {
@@ -414,13 +414,13 @@
           "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
         }
       },
-      "id": "c1d2e3f4-2004-4a1a-9a1a-200000000004",
+      "id": "80683b45-a59a-495a-8c98-2050a21cbf3f",
       "name": "Record Login Attempt",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1472,
-        -240
+        7072,
+        3792
       ],
       "credentials": {
         "postgres": {
@@ -437,13 +437,13 @@
           "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
         }
       },
-      "id": "76469dee-3eeb-4df2-a5d2-ae5968db1951",
+      "id": "d5628b01-371d-46b7-ab8b-f1551bda3155",
       "name": "Check User Exists (Login)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1424,
-        -224
+        7296,
+        3792
       ],
       "credentials": {
         "postgres": {
@@ -476,13 +476,13 @@
         },
         "options": {}
       },
-      "id": "bf4616f5-c516-4a68-b4e0-ea24b9e29719",
+      "id": "f87f29e2-da6c-490d-a8f2-ef1177ac6685",
       "name": "User Exists?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1200,
-        -224
+        7520,
+        3792
       ]
     },
     {
@@ -493,13 +493,13 @@
           "responseCode": 401
         }
       },
-      "id": "06f20eb5-6650-43ac-b6e4-5a7df31f62a5",
+      "id": "489154c8-3228-4009-9537-648bd8ef294b",
       "name": "Respond Invalid Login",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        -304,
-        -128
+        8640,
+        3888
       ]
     },
     {
@@ -510,13 +510,13 @@
           "queryReplacement": "={{ [$('Login Webhook').item.json.body.email] }}"
         }
       },
-      "id": "64339855-87fb-42c6-871c-56a018eafb5a",
+      "id": "52f449cb-6b98-444b-b767-e6aecc025936",
       "name": "Fetch User (Login)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -976,
-        -304
+        7744,
+        3728
       ],
       "credentials": {
         "postgres": {
@@ -531,13 +531,13 @@
         "value": "={{ $json.password_salt + ':' + $('Login Webhook').item.json.body.password }}",
         "dataPropertyName": "passwordHash"
       },
-      "id": "fb74971d-5b94-4da7-8b84-a0aad31b8a4e",
+      "id": "d66711a9-4c94-4ee6-9474-1b59ea9fe6d7",
       "name": "Hash Submitted Password (Login)",
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 2,
       "position": [
-        -752,
-        -304
+        7968,
+        3728
       ],
       "credentials": {
         "crypto": {
@@ -550,13 +550,13 @@
       "parameters": {
         "jsCode": "// Constant-time comparison so a failed login doesn't leak how many\n// leading hex characters of the stored hash the guess got right via response timing.\nfunction timingSafeEqualHex(a, b) {\n  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;\n  let diff = 0;\n  for (let i = 0; i < a.length; i++) {\n    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);\n  }\n  return diff === 0;\n}\n\nconst submitted = $json.passwordHash;\nconst stored = $('Fetch User (Login)').item.json.password_hash;\n\nreturn [{ json: { passwordMatches: timingSafeEqualHex(submitted, stored) } }];"
       },
-      "id": "d3f1a2b4-8c7e-4a1d-9f3b-6e2c1a0b9d5f",
+      "id": "4917451e-ecee-4d7f-a08e-def9aaaf2228",
       "name": "Constant-Time Compare (Login)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -628,
-        -180
+        8192,
+        3728
       ]
     },
     {
@@ -582,13 +582,13 @@
         },
         "options": {}
       },
-      "id": "4b1a5f41-0ce5-4a80-9c0d-ade1169b22b5",
+      "id": "94a658db-64ba-4cc2-ab65-f9abc6002113",
       "name": "Password Correct?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -528,
-        -304
+        8416,
+        3728
       ]
     },
     {
@@ -599,13 +599,13 @@
           "algorithm": "HS256"
         }
       },
-      "id": "72be7df8-b7c5-497e-82a7-563e843a2ff1",
+      "id": "96d426b4-52c0-4f53-b966-7a6d998a17eb",
       "name": "Sign JWT (Login)",
       "type": "n8n-nodes-base.jwt",
       "typeVersion": 1,
       "position": [
-        -304,
-        -352
+        8640,
+        3680
       ],
       "credentials": {
         "jwtAuth": {
@@ -640,13 +640,13 @@
         },
         "options": {}
       },
-      "id": "47cc9e13-dd29-4fc6-965c-a95127e58ffb",
+      "id": "e96f7887-6795-4edb-861a-bb22a026e573",
       "name": "Shape Login Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -80,
-        -352
+        8864,
+        3680
       ]
     },
     {
@@ -655,13 +655,13 @@
         "responseBody": "={{ $json }}",
         "options": {}
       },
-      "id": "15819468-5c42-4269-b19e-d1233d8abda0",
+      "id": "6a186a02-c005-4613-8874-d7cbc9b373a1",
       "name": "Respond Login Success",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        144,
-        -352
+        9088,
+        3680
       ]
     },
     {
@@ -673,13 +673,13 @@
           "responseMode": "lastNode"
         }
       },
-      "id": "3e5bfcf6-5e77-4765-9553-1f8940477756",
+      "id": "3dc513ac-b902-4503-bdb5-5d1c38274141",
       "name": "Chat Trigger",
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -1648,
-        560
+        6400,
+        4368
       ],
       "webhookId": "3d0b43af-45fb-436b-ace4-c668bdf7c8a5"
     },
@@ -710,13 +710,13 @@
         "includeOtherFields": true,
         "options": {}
       },
-      "id": "2f18381a-d7fc-4384-b318-258a70bac5ac",
+      "id": "13afa458-fa64-41c0-8fb9-7697bab09f3f",
       "name": "Normalize Question",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -976,
-        560
+        7072,
+        4368
       ]
     },
     {
@@ -731,13 +731,13 @@
         "topK": 8,
         "options": {}
       },
-      "id": "4f6fadf7-4e34-42b2-b830-9b55db3621e8",
+      "id": "93321b2c-5315-4489-8743-79042921d85f",
       "name": "Retrieve Candidate Chunks",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "typeVersion": 1.3,
       "position": [
-        -752,
-        464
+        7296,
+        4368
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -758,13 +758,13 @@
         "jsonBody": "={{ { \"inputs\": { \"source_sentence\": $(\"Normalize Question\").item.json.question, \"sentences\": $input.all().map(i => i.json.document.pageContent) } } }}",
         "options": {}
       },
-      "id": "b95f666d-bd2d-498b-941c-8be25982c531",
+      "id": "af19c891-dd67-4b49-aab8-82c29ca84311",
       "name": "Rerank with HuggingFace",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -176,
-        496
+        7872,
+        4288
       ],
       "executeOnce": true,
       "credentials": {
@@ -778,13 +778,13 @@
       "parameters": {
         "jsCode": "const NL = String.fromCharCode(10);\nconst raw = $input.first().json;\nlet scores;\nif (Array.isArray(raw)) {\n  scores = raw;\n} else if (raw && Array.isArray(raw.data)) {\n  scores = raw.data;\n} else {\n  scores = $input.all().map(function (item) {\n    const v = item.json;\n    if (typeof v === 'number') return v;\n    if (v && typeof v.data === 'number') return v.data;\n    const vals = Object.values(v || {});\n    return typeof vals[0] === 'number' ? vals[0] : 0;\n  });\n}\n\nconst originalChunks = $('Retrieve Candidate Chunks').all().map(i => i.json);\n\n// RBAC: only surface chunks the requester's role is allowed to see. Missing\n// visibility (pre-RBAC ingested docs) defaults to 'member' so nothing already\n// in the knowledge base silently disappears.\nconst requesterRole = $('JWT Verify (Chat)').item.json.payload.role;\nconst allowedVisibilities = requesterRole === 'admin' ? ['member', 'admin'] : ['member'];\n\nconst scored = originalChunks.map(function (chunk, idx) {\n  return {\n    pageContent: chunk.document.pageContent,\n    metadata: chunk.document.metadata || {},\n    relevanceScore: scores[idx] !== undefined ? scores[idx] : 0\n  };\n}).filter(function (chunk) {\n  const visibility = chunk.metadata.visibility || 'member';\n  return allowedVisibilities.indexOf(visibility) !== -1;\n});\n\nscored.sort(function (a, b) { return b.relevanceScore - a.relevanceScore; });\nconst ranked = scored.slice(0, 4);\n\nconst topScore = ranked.length > 0 ? ranked[0].relevanceScore : 0;\n\nconst contextText = ranked.map((c, i) => {\n  const src = c.metadata.source || 'unknown source';\n  const section = c.metadata.section || 'n/a';\n  const updated = c.metadata.updated_at || 'n/a';\n  return '[' + (i + 1) + '] Source: ' + src + ' | Section: ' + section + ' | Last updated: ' + updated + NL + c.pageContent;\n}).join(NL + NL);\n\nconst citations = ranked.map((c, i) => ({\n  marker: '[' + (i + 1) + ']',\n  source: c.metadata.source || 'unknown source',\n  section: c.metadata.section || 'n/a',\n  updatedAt: c.metadata.updated_at || 'n/a',\n  relevanceScore: c.relevanceScore\n}));\n\nconst citationsFormatted = citations.map(c => c.marker + ' ' + c.source + ' (' + c.section + ', updated ' + c.updatedAt + ')').join(NL);\n\nreturn [{ json: { topScore: topScore, contextText: contextText, citations: citations, citationsFormatted: citationsFormatted, chunkCount: ranked.length } }];"
       },
-      "id": "e3f50266-c6bf-4c88-b51a-af40c6ff4aaf",
+      "id": "979f831f-98c3-436c-bc3d-ad879f6e0d14",
       "name": "Build Grounded Context",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        48,
-        560
+        8096,
+        4368
       ]
     },
     {
@@ -796,24 +796,28 @@
           "maxIterations": 3
         }
       },
-      "id": "91ea5b77-3099-4806-b3b2-e1731691ad57",
+      "id": "13c3e1ea-d565-4d3c-94b5-d35166f663bb",
       "name": "Generate Grounded Answer",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        496,
-        320
-      ]
+        8544,
+        4112
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "notesInFlow": false,
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {},
-      "id": "15dd5bbc-861d-4f71-8e72-5e313131a448",
+      "id": "0bd9c3c9-4d1f-433b-b656-f8f3d570264f",
       "name": "Conversation Memory",
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [
-        640,
-        544
+        8688,
+        4336
       ]
     },
     {
@@ -866,13 +870,13 @@
         },
         "options": {}
       },
-      "id": "08c16f54-1f25-4f8b-9d2b-38762630175a",
+      "id": "beb58347-189b-43f0-9bd9-e3a67f1f479d",
       "name": "Shape Success Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        848,
-        416
+        8896,
+        4320
       ]
     },
     {
@@ -883,13 +887,13 @@
           "queryReplacement": "={{ [$json.sessionId, $json.question, $json.outcome, $json.confidenceScore, $json.citationsJson, $json.latencyMs, $execution.id] }}"
         }
       },
-      "id": "59d244b8-4e6f-4542-8035-4db8721f8f36",
+      "id": "ef690b9e-4035-47fe-8f31-01da564a6fef",
       "name": "Log Answered Query",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1072,
-        416
+        9120,
+        4320
       ],
       "credentials": {
         "postgres": {
@@ -948,13 +952,13 @@
         },
         "options": {}
       },
-      "id": "a3b3d03b-91ae-4f5e-beff-cd2d8dd85465",
+      "id": "7b2e95f5-71d3-4e7c-a0f7-e4e8625c4914",
       "name": "Shape Refusal Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        560,
-        720
+        8608,
+        4560
       ]
     },
     {
@@ -965,13 +969,13 @@
           "queryReplacement": "={{ [$json.sessionId, $json.question, $json.outcome, $json.confidenceScore, $json.citationsJson, $json.latencyMs, $execution.id] }}"
         }
       },
-      "id": "dc097a6a-121c-482f-9018-0520bb329993",
+      "id": "83aa5a1f-7cab-4f02-a7f7-69b9d250ae50",
       "name": "Log Refused Query",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        848,
-        720
+        8896,
+        4560
       ],
       "credentials": {
         "postgres": {
@@ -991,13 +995,13 @@
         "text": "=:warning: Knowledge gap detected\nQuestion: {{ $(\"Normalize Question\").item.json.question }}\nConfidence score: {{ $(\"Build Grounded Context\").item.json.topScore }}\nSession: {{ $(\"Normalize Question\").item.json.sessionId }}",
         "otherOptions": {}
       },
-      "id": "884984cc-ff14-40a8-a29f-ec9a0e4c4f62",
+      "id": "1e1d30da-1174-483c-b18f-076099f443c0",
       "name": "Alert: Knowledge Gap",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.5,
       "position": [
-        1072,
-        720
+        9120,
+        4560
       ],
       "webhookId": "a7d3d364-14e4-4cb5-a30a-d0d4438fe608",
       "retryOnFail": true,
@@ -1016,13 +1020,13 @@
           "provider": "auto"
         }
       },
-      "id": "7810def2-e5bb-4240-ad72-9a4a140ea254",
+      "id": "9e11f08d-6f84-4bdf-88ca-1f3e11a0780a",
       "name": "HuggingFace Embeddings",
       "type": "@n8n/n8n-nodes-langchain.embeddingsHuggingFaceInference",
       "typeVersion": 1,
       "position": [
-        -672,
-        688
+        7376,
+        4592
       ],
       "credentials": {
         "huggingFaceApi": {
@@ -1039,13 +1043,13 @@
           "temperature": 0.2
         }
       },
-      "id": "e1eaaff0-40de-473c-adf3-caab3f4cc213",
+      "id": "9850895b-2a00-45b1-80fa-e8cad55369a7",
       "name": "Groq LLM",
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        512,
-        544
+        8560,
+        4336
       ],
       "credentials": {
         "groqApi": {
@@ -1078,13 +1082,13 @@
         },
         "options": {}
       },
-      "id": "bafe8734-db5b-41db-8c21-7bd0240dc3e8",
+      "id": "4405151a-1e6a-482b-af38-95a6e8080fb9",
       "name": "Has Candidate Chunks?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -400,
-        560
+        7648,
+        4368
       ]
     },
     {
@@ -1096,13 +1100,13 @@
           "binaryPropertyName": "data"
         }
       },
-      "id": "24e3e4a8-c090-4b01-8fee-49ff5ff37474",
+      "id": "eb666c6c-2a48-46d4-81de-a11f560b6ce4",
       "name": "Upload Document",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1648,
-        1344
+        6400,
+        5184
       ],
       "webhookId": "b6e4c3e9-6b51-46fa-b71a-351a25834555"
     },
@@ -1117,13 +1121,13 @@
         "embeddingBatchSize": 50,
         "options": {}
       },
-      "id": "d82a7a24-aedb-4bae-b338-65d972c29616",
+      "id": "74262a1f-ced9-4630-853a-6c476ce074bc",
       "name": "Store in Qdrant",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "typeVersion": 1.3,
       "position": [
-        -720,
-        944
+        7328,
+        4784
       ],
       "credentials": {
         "qdrantApi": {
@@ -1139,13 +1143,13 @@
           "provider": "auto"
         }
       },
-      "id": "67e17817-150e-45e6-bfe3-b6a8788609e2",
+      "id": "28dc4667-9d61-4258-a75f-2d202d6c750f",
       "name": "HuggingFace Embeddings (Ingest)",
       "type": "@n8n/n8n-nodes-langchain.embeddingsHuggingFaceInference",
       "typeVersion": 1,
       "position": [
-        -752,
-        1168
+        7296,
+        5008
       ],
       "credentials": {
         "huggingFaceApi": {
@@ -1184,13 +1188,13 @@
           }
         }
       },
-      "id": "28d55b4a-10ed-43b6-9f2d-09738fcc37c4",
+      "id": "e867246d-9734-4a4a-a8a6-f341c0942e16",
       "name": "Load Uploaded Document",
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1.1,
       "position": [
-        -624,
-        1168
+        7424,
+        5008
       ]
     },
     {
@@ -1198,13 +1202,13 @@
         "chunkOverlap": 150,
         "options": {}
       },
-      "id": "13451868-1f6f-49ea-93dc-008a8597e309",
+      "id": "099e909a-c0b8-47d3-973d-b03a31dc5cd4",
       "name": "Chunk Splitter",
       "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
       "typeVersion": 1,
       "position": [
-        -544,
-        1376
+        7504,
+        5216
       ]
     },
     {
@@ -1230,13 +1234,13 @@
         },
         "options": {}
       },
-      "id": "f5195530-71ca-4c0d-9015-510a16383b31",
+      "id": "3481349b-bc9f-4c20-af5e-11f75105a8d0",
       "name": "Verify Insert Succeeded",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -256,
-        1152
+        7792,
+        4992
       ]
     },
     {
@@ -1250,13 +1254,13 @@
           "responseCode": 200
         }
       },
-      "id": "2789c936-8cf7-41b6-8ede-a91cc3f127c8",
+      "id": "db991a02-dcb8-44c9-85f5-4374a010c1dc",
       "name": "Respond Success",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -32,
-        1056
+        8016,
+        4896
       ]
     },
     {
@@ -1267,13 +1271,13 @@
           "responseCode": 500
         }
       },
-      "id": "80b1a293-6187-41a6-a20a-33bcf1376b2d",
+      "id": "ab9335f5-6b20-4687-ac5c-c9c103f2d34c",
       "name": "Respond Error",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -32,
-        1248
+        8016,
+        5088
       ]
     },
     {
@@ -1282,13 +1286,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "1b09ae9e-487e-4933-9a32-05a7367b81ec",
+      "id": "0140a050-f0f7-4302-825e-304dc68df1d7",
       "name": "List Documents",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1648,
-        1760
+        6400,
+        5600
       ],
       "webhookId": "a34b5109-7818-46d7-926a-88dab6ad233f"
     },
@@ -1303,13 +1307,13 @@
         "jsonBody": "={{ { \"limit\": 1000, \"with_payload\": true, \"with_vector\": false } }}",
         "options": {}
       },
-      "id": "2b04acec-a7b3-40ba-a4da-520ba1e68769",
+      "id": "4ba18d5c-6511-46d7-8030-ef0c4307b168",
       "name": "Scroll Qdrant Points",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1200,
-        1664
+        6848,
+        5504
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -1322,13 +1326,13 @@
       "parameters": {
         "jsCode": "const response = $input.first().json;\nconst points = (response.result && response.result.points) || [];\n\n// RBAC, same rule as Build Grounded Context: a member must not see that an\n// admin-only document exists, not even its file name. Missing visibility\n// (pre-RBAC uploads) counts as 'member'.\nconst requesterRole = $('JWT Verify (List Documents)').item.json.payload.role;\nconst allowedVisibilities = requesterRole === 'admin' ? ['member', 'admin'] : ['member'];\n\nconst bySource = {};\nfor (const point of points) {\n  const payload = point.payload || {};\n  const meta = payload.metadata || payload;\n  const visibility = meta.visibility || 'member';\n  if (allowedVisibilities.indexOf(visibility) === -1) continue;\n  const source = meta.source || 'unknown source';\n  if (!bySource[source]) {\n    bySource[source] = {\n      source: source,\n      sections: new Set(),\n      updatedAt: meta.updated_at || null,\n      visibility: visibility,\n      chunkCount: 0\n    };\n  }\n  const entry = bySource[source];\n  entry.chunkCount += 1;\n  if (meta.section) entry.sections.add(meta.section);\n  if (meta.updated_at && (!entry.updatedAt || meta.updated_at > entry.updatedAt)) {\n    entry.updatedAt = meta.updated_at;\n  }\n}\n\nconst documents = Object.values(bySource).map(function (entry) {\n  return {\n    source: entry.source,\n    sectionCount: entry.sections.size,\n    chunkCount: entry.chunkCount,\n    updatedAt: entry.updatedAt,\n    visibility: entry.visibility\n  };\n}).sort(function (a, b) {\n  return (b.updatedAt || '').localeCompare(a.updatedAt || '');\n});\n\nreturn [{ json: { documents: documents, count: documents.length } }];"
       },
-      "id": "74c8fcf7-cefc-4c7c-837f-1d237902067a",
+      "id": "d6d931b7-17a2-44b0-ab0c-e9614f18856a",
       "name": "Aggregate By Source",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -976,
-        1664
+        7072,
+        5504
       ]
     },
     {
@@ -1337,13 +1341,13 @@
           "responseCode": 200
         }
       },
-      "id": "f3ed0da2-dc33-4e93-ae0a-a650274bd7e5",
+      "id": "d07fc60a-dcfe-4c5c-98a4-6ac4bb765fb5",
       "name": "Respond With Documents",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -752,
-        1664
+        7296,
+        5504
       ]
     },
     {
@@ -1369,13 +1373,13 @@
         },
         "options": {}
       },
-      "id": "04bb3719-2ab4-4c09-9976-1aeff8646c6a",
+      "id": "cdf16449-c2e5-4c0a-83f2-18c2158bd8d5",
       "name": "Is Load Previous Session?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1200,
-        464
+        6848,
+        4272
       ]
     },
     {
@@ -1386,13 +1390,13 @@
           "responseCode": 200
         }
       },
-      "id": "c220eb7f-444f-4ec9-9474-a7e714c111ff",
+      "id": "4bb7e39f-470a-469f-ad60-7ca5c364b6b1",
       "name": "Respond: Empty History",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -976,
-        368
+        7072,
+        4176
       ]
     },
     {
@@ -1427,13 +1431,13 @@
         },
         "options": {}
       },
-      "id": "63cc3180-68b1-4e5c-b3a3-470adc72d734",
+      "id": "01c2c6e8-9035-4bec-b490-b0c56916eb09",
       "name": "Reply: Answer",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1296,
-        416
+        9344,
+        4320
       ]
     },
     {
@@ -1468,13 +1472,13 @@
         },
         "options": {}
       },
-      "id": "9676e4c1-c595-4a7f-9c1e-5df719bd0a82",
+      "id": "ed30f23e-22c9-464d-841b-e84788b4332d",
       "name": "Reply: Refusal",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1296,
-        720
+        9344,
+        4560
       ]
     },
     {
@@ -1501,13 +1505,13 @@
         },
         "options": {}
       },
-      "id": "5e975c89-1915-429a-991d-8d58c2fbc0d7",
+      "id": "cac9c794-05cb-4d40-a62c-d879a19ac9bd",
       "name": "Confidence Check (>= 0.45)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        272,
-        560
+        8320,
+        4368
       ]
     },
     {
@@ -1516,13 +1520,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "83ab5d0f-daf1-45c7-bc7b-3db457455291",
+      "id": "ba5df2c6-21a5-4ca2-9b7f-e19be68e4cc5",
       "name": "Dashboard Stats Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -1648,
-        2272
+        6400,
+        6112
       ],
       "webhookId": "c2e2b2b2-2222-4b2b-9b2b-222222222222"
     },
@@ -1534,13 +1538,13 @@
           "queryReplacement": "={{ [$('Dashboard Stats Webhook').item.json.query.days ? Number($('Dashboard Stats Webhook').item.json.query.days) : null] }}"
         }
       },
-      "id": "6196eb85-4cbf-4d5f-ad09-d13c0c876e1e",
+      "id": "f91cda93-dc69-4247-b393-da822292f15e",
       "name": "Query Stats (Neon)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -976,
-        2080
+        7072,
+        5920
       ],
       "credentials": {
         "postgres": {
@@ -1555,13 +1559,13 @@
         "responseBody": "={{ $json.stats }}",
         "options": {}
       },
-      "id": "6ba99c01-454f-4df8-b255-a1e055b389a3",
+      "id": "31582875-5d8a-4f97-bd57-10a360b005e3",
       "name": "Respond With Stats",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        -752,
-        2080
+        7296,
+        5920
       ]
     },
     {
@@ -1572,13 +1576,13 @@
           "algorithm": "HS256"
         }
       },
-      "id": "6442237d-bf37-42d0-8d71-90f8bec3dc65",
+      "id": "e94758c2-c51e-46aa-a421-34bd77809092",
       "name": "JWT Verify (Chat)",
       "type": "n8n-nodes-base.jwt",
       "typeVersion": 1,
       "position": [
-        -1424,
-        560
+        6624,
+        4368
       ],
       "credentials": {
         "jwtAuth": {
@@ -1620,13 +1624,13 @@
         },
         "options": {}
       },
-      "id": "26cfc178-5adc-40e4-af49-39696fe89d9f",
+      "id": "ac5091d6-0a93-437e-9f37-9977e31cd00c",
       "name": "Reply: Unauthorized (Chat)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1200,
-        656
+        6848,
+        4464
       ]
     },
     {
@@ -1637,13 +1641,13 @@
           "algorithm": "HS256"
         }
       },
-      "id": "8bd4ae60-c5ab-412a-80d3-ebeeab17eb5c",
+      "id": "47463daa-0a69-47e1-9d95-773f1e508e6e",
       "name": "JWT Verify (Upload)",
       "type": "n8n-nodes-base.jwt",
       "typeVersion": 1,
       "position": [
-        -1424,
-        1344
+        6624,
+        5184
       ],
       "credentials": {
         "jwtAuth": {
@@ -1661,13 +1665,13 @@
           "responseCode": 401
         }
       },
-      "id": "990e55f6-4147-4b71-8fbe-08d2a42fc1fb",
+      "id": "e5db81f8-40f0-4d30-b724-43c323f5cfeb",
       "name": "Respond Unauthorized (Upload)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        -1200,
-        1440
+        6848,
+        5280
       ]
     },
     {
@@ -1693,13 +1697,13 @@
         },
         "options": {}
       },
-      "id": "78ae5eff-72d3-4de8-a261-bb7ebc4af49d",
+      "id": "e290a784-5688-462a-99bc-00a19e141756",
       "name": "Is Admin (Upload)?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1200,
-        1248
+        6848,
+        5088
       ]
     },
     {
@@ -1710,13 +1714,13 @@
           "responseCode": 403
         }
       },
-      "id": "ede4bed3-ca39-48b2-b03e-2e053273e4ce",
+      "id": "aea922bf-9d97-4335-8396-09aa3b71132d",
       "name": "Respond Forbidden (Upload)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        -976,
-        1344
+        7072,
+        5184
       ]
     },
     {
@@ -1727,13 +1731,13 @@
           "algorithm": "HS256"
         }
       },
-      "id": "76bc9f2f-44e3-498a-b98c-cfac2191342e",
+      "id": "32927819-36f8-4415-bf86-b5c0a327fc57",
       "name": "JWT Verify (List Documents)",
       "type": "n8n-nodes-base.jwt",
       "typeVersion": 1,
       "position": [
-        -1424,
-        1760
+        6624,
+        5600
       ],
       "credentials": {
         "jwtAuth": {
@@ -1751,13 +1755,13 @@
           "responseCode": 401
         }
       },
-      "id": "b41ca7af-5897-4559-8ae8-a3db26ff7667",
+      "id": "90c09f9e-92b6-48c4-ba33-78841e0226ef",
       "name": "Respond Unauthorized (List Documents)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        -1200,
-        1856
+        6848,
+        5696
       ]
     },
     {
@@ -1771,10 +1775,10 @@
       "type": "n8n-nodes-base.jwt",
       "typeVersion": 1,
       "position": [
-        -1424,
-        2272
+        6624,
+        6112
       ],
-      "id": "359deea2-a89b-43fc-9d3b-f1ddca4e0a05",
+      "id": "a9e250ef-c4bc-4739-8756-90f295d48afa",
       "name": "JWT",
       "alwaysOutputData": false,
       "credentials": {
@@ -1813,10 +1817,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1200,
-        2176
+        6848,
+        6016
       ],
-      "id": "bf8f9924-9210-4dc9-84d9-978fa2dcf712",
+      "id": "6d116375-c7fe-4e17-95b1-063850ba8b68",
       "name": "Is Admin (Dashboard)?"
     },
     {
@@ -1830,10 +1834,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -976,
-        2272
+        7072,
+        6112
       ],
-      "id": "3c66886b-d7db-4d2e-95ca-1afb8875b7eb",
+      "id": "3ae7921a-0441-4ff9-aece-ae9e6abda73c",
       "name": "Respond Forbidden (Dashboard)"
     },
     {
@@ -1847,10 +1851,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -1200,
-        2368
+        6848,
+        6208
       ],
-      "id": "df5141cf-9e50-400b-87b6-6f67de88f379",
+      "id": "c84cc9bb-8390-4c78-bfaa-3e1e11186eec",
       "name": "Respond Unauthorized (Dashboard)"
     },
     {
@@ -1860,11 +1864,52 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -976,
-        1152
+        7072,
+        4992
       ],
-      "id": "a980b132-3cf2-4f0b-a42a-c2753819fb58",
+      "id": "5d16304f-ac00-4603-ac3b-4e664ef845ed",
       "name": "Reattach Upload Binary"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status",
+              "name": "status",
+              "value": "busy",
+              "type": "string"
+            },
+            {
+              "id": "confidence",
+              "name": "=confidence",
+              "value": "=0",
+              "type": "number"
+            },
+            {
+              "id": "body",
+              "name": "body",
+              "value": " I'm getting a lot of questions right now. Please try again in a few seconds.",
+              "type": "string"
+            },
+            {
+              "id": "citationsJson",
+              "name": "citationsJson",
+              "value": "[]",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "48fd42a6-a106-4499-9fe3-02871a641ee0",
+      "name": "Reply: Busy",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8896,
+        4128
+      ]
     }
   ],
   "connections": {
@@ -2183,6 +2228,13 @@
         [
           {
             "node": "Shape Success Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply: Busy",
             "type": "main",
             "index": 0
           }
@@ -2614,8 +2666,7 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "saveDataSuccessExecution": "none",
-    "saveDataErrorExecution": "all",
-    "saveManualExecutions": true
+    "binaryMode": "separate",
+    "availableInMCP": true
   }
 }
